@@ -3,9 +3,14 @@
 // =============================
 import os from 'os';
 import { log } from './logger.js';
-import { getHardwareId } from './identity/index.js';
+
+// config services
 import { initConnectConfig,connectConfig } from './config/modules/connect.js';
 import { initVideoConfig, videoConfig } from './config/modules/videoConfig.js';
+
+// auth service
+import { getHardwareId } from './identity/index.js';
+
 import { startAll, restartAll } from './core/serviceRegistry.js';
 import { deviceMonitor } from './deviceMonitor/deviceMonitor.js';
 import { deviceRegistry } from './deviceRegistry/index.js';
