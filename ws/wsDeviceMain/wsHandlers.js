@@ -11,7 +11,7 @@ import { updateSource } from '../../core/rcBuffer.js';
 // плохая идея завязывать сюда сервисы!
 // соблюдаем максимальную изолированность! 
 import { services } from '../../core/serviceRegistry.js';
-import { servicesList } from '../../core/servicesName.js';
+import { servicesList } from '../../core/serviceName.js';
 
 
 export function handleServerMessage(ws, packet) {
