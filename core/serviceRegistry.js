@@ -4,7 +4,7 @@
 // =============================
 
 import { log, warn } from '../logger.js';
-import { servicesList } from './servicesName.js';
+import { servicesList } from './serviceName.js';
 import { connectConfig } from '../config/modules/connect.js';
 import { bus } from './bus.js';
 import { EVENTS } from './events.js';
@@ -12,10 +12,10 @@ import { EVENTS } from './events.js';
 // WS connect 
 import { initWS } from '../ws/wsDeviceMain/wsManager.js';
 import { initWS_ControlAgent } from '../ws/wsAgentControl/wsControlManager.js';
-import { initWS_RC } from '../ws/wsRcManager.js';
+import { initWS_RC } from '../ws/wsAgentRc/wsRcManager.js';
 
 import { initSendMsgService } from '../network/sendMsgService.js';
-import { initTelemetryService } from '../metrics/telemetryService.js';
+import { initTelemetryService } from '../metrics/telemtryService.js';
 
 //import { initVideoService } from '../video/videoService.js';
 //import { initCameraService } from '../camera/cameraManager.js';
