@@ -45,3 +45,50 @@ JSON карта
     }
   ]
 }
+
+#######
+Работа с сервисом (примерная)
+######
+Ининциализация 
+init({ deviceMonitor })
+
+1. Получить список и состояние устройств
+getState(): {
+  controls: Control[],
+  devices: {
+    video: LogicalDevice[],
+    serial: LogicalDevice[]
+  }
+}
+
+# LogicalDevice
+{
+  id: 'camera1',
+  type: 'video',
+  status: 'online' | 'offline'
+}
+
+# Control (v1)
+{
+  id: 'control1',
+  cameras: ['camera1', 'camera2'],
+  rc: ['rc1']
+}
+
+# DEVICE_LIST с фронта
+  - wsAgent/control получил команду
+  - дернул deviceRegistry.getState()
+  - отдал результат фронту
+
+# metricService
+  - по таймеру дернул deviceRegistry.getState()
+  - отправил данные на сервер
+
+# Камера пропала
+  - deviceMonitor.refresh()
+  - deviceRegistry.handlePhysicalChange()
+  - статус обновился
+  - событие в шину — позже, не сейчас
+
+# DEFAULT
+  один control по уолчанию хранить все устройства
