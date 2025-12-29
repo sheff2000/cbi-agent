@@ -66,7 +66,8 @@ export class DeviceRegistry {
             id: nextId,
             type,
             path,
-            status: 'online'
+            status: 'online',
+            inUse: false, 
           });
 
           // по умолчанию кладем в control1
@@ -83,6 +84,7 @@ export class DeviceRegistry {
           const found = list.find(d => d.path === path);
           if (found) {
             found.status = 'offline';
+            found.inUse = false;
             dirty = true;
           }
         }
@@ -111,6 +113,13 @@ export class DeviceRegistry {
         return { ok: false, reason: 'camera_offline' };
       }
 
+        if (cam.inUse) {
+        return { ok: false, reason: 'camera_in_use' };
+      }
+
+      cam.inUse = true;
+      this.save();
+
       return {
         ok: true,
         device: {
@@ -121,4 +130,65 @@ export class DeviceRegistry {
       };
     }
 
+    // освобождение ресурса
+    releaseVideo({ cameraId }) {
+      const cam = this.state.devices.video.find(d => d.id === cameraId);
+      if (!cam) return { ok: false, reason: 'camera_not_found' };
+
+      if (!cam.inUse) return { ok: true, released: false };
+
+      cam.inUse = false;
+      this.save();
+
+      return { ok: true, released: true };
+    }
+
+  requestRC({ controlId, rcId }) {
+      const control = this.state.controls.find(c => c.id === controlId);
+      if (!control) {
+        return { ok: false, reason: 'control_not_found' };
+      }
+
+      if (!control.rc.includes(rcId)) {
+        return { ok: false, reason: 'rc_not_in_control' };
+      }
+
+      const rc = this.state.devices.serial.find(d => d.id === rcId);
+      if (!rc) {
+        return { ok: false, reason: 'rc_not_found' };
+      }
+
+      if (rc.status !== 'online') {
+        return { ok: false, reason: 'rc_offline' };
+      }
+
+        if (rc.inUse) {
+        return { ok: false, reason: 'rc_in_use' };
+      }
+
+      rc.inUse = true;
+      this.save();
+
+      return {
+        ok: true,
+        device: {
+          id: rc.id,
+          type: rc.type,
+          path: rc.path
+        }
+      };
+    }
+
+    // освобождение ресурса
+    releaseRC({ rcId }) {
+      const rc = this.state.devices.serial.find(d => d.id === rcId);
+      if (!rc) return { ok: false, reason: 'rc_not_found' };
+
+      if (!rc.inUse) return { ok: true, released: false };
+
+      rc.inUse = false;
+      this.save();
+
+      return { ok: true, released: true };
+    }
 }

@@ -29,6 +29,7 @@ export function buildDefaultState(physicalSnapshot) {
       type: 'video',
       path: cam.path,
       status: cam.status || 'online',
+      inUse: false, // ресурс используется?
     });
   }
 
@@ -38,6 +39,7 @@ export function buildDefaultState(physicalSnapshot) {
       type: 'serial',
       path: rc.path,
       status: rc.status || 'online',
+      inUse: false, // ресурс используется?
     });
   }
 

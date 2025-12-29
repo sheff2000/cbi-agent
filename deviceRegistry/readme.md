@@ -26,7 +26,7 @@ deviceRegistry/
       - после deviceMonitor.refresh()
       - либо по событию (позже)
 
-### requestVideo({ controlId, cameraId })
+### requestVideo({ controlId, cameraId})
   Разрешение доступа, не запуск стрима!
   Возвращает
     - либо { ok: false, reason }
@@ -34,6 +34,15 @@ deviceRegistry/
 
 ### requestRC({ controlId, rcId })
   тоже но для управления, а не камеры!
+
+### блокиврока ресурса если им уже кто-то пользуется
+### пока не понятно - нужна ли эта реализация или нет 
+### оставляю просто как мысль на потом
+  requestRC({ controlId, rcId, ownerId, sessionId })
+  requestVideo({ controlId, cameraId, ownerId, sessionId })
+  releaseVideo({ cameraId, ownerId, sessionId })
+  releaseRC({ rcId, ownerId, sessionId })
+  releaseAllBySession({ sessionId })
 
 getDevices()
 getControls()
