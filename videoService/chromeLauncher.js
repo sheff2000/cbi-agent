@@ -1,8 +1,11 @@
+// video/chromeLauncher.js
 import { spawn } from 'child_process';
 
-export function launchChrome({ devicePath, flightUrl, accessToken, video }) {
+export function launchChrome({ devicePath, flightId, tokenAccess }) {
   const url =
-    `${flightUrl}?agentToken=${accessToken}&camera=${encodeURIComponent(devicePath)}`;
+    `${process.env.FLIGHT_URL}/${flightId}` +
+    `?agentToken=${tokenAccess}` +
+    `&camera=${encodeURIComponent(devicePath)}`;
 
   const args = [
     '--headless=new',

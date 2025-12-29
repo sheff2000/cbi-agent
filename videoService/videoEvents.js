@@ -1,3 +1,4 @@
+// video/videoEvents.js
 import { bus } from '../core/bus.js';
 import { EVENTS } from '../core/events.js';
 

@@ -1,40 +1,60 @@
+// video/videoService.js
+import { bus } from '../core/bus.js';
+import { EVENTS } from '../core/events.js';
 import { VideoState } from './videoState.js';
 import { VideoInstance } from './videoInstance.js';
 import { emitVideoStatus } from './videoEvents.js';
+import { log, warn } from '../logger.js';
 
-export class VideoService {
-  constructor() {
-    this.state = new VideoState();
-  }
+export async function initVideoService() {
+  const state = new VideoState();
 
-  async start({ streamId, flight, source, video }) {
-    if (this.state.has(streamId)) {
-      throw new Error('stream_exists');
+  bus.on(EVENTS.AGENT_VIDEO_START, async payload => {
+    const { device, flightId, tokenAccess } = payload;
+
+    const streamId = `${flightId}:${device.id}`;
+
+    if (state.has(streamId)) {
+      warn('[VIDEO] stream already running', streamId);
+      return;
     }
 
     const inst = new VideoInstance({
       streamId,
-      flight,
-      source,
-      video
+      device,
+      flightId,
+      tokenAccess
     });
 
-    this.state.add(streamId, inst);
+    inst.onStatus(s => emitVideoStatus(s));
+    state.add(streamId, inst);
 
-    inst.onStatus(status => emitVideoStatus(status));
+    try {
+      await inst.start();
+    } catch (e) {
+      warn('[VIDEO] start failed', e.message);
+      state.remove(streamId);
+    }
+  });
 
-    await inst.start();
-  }
-
-  async stop(streamId) {
-    const inst = this.state.get(streamId);
+  bus.on(EVENTS.AGENT_VIDEO_STOP, async payload => {
+    const { streamId } = payload;
+    const inst = state.get(streamId);
     if (!inst) return;
 
     await inst.stop();
-    this.state.remove(streamId);
-  }
+    state.remove(streamId);
+  });
 
-  getState() {
-    return this.state.snapshot();
-  }
+  log('[VIDEO] service initialized');
+
+  return {
+    getState: () => state.snapshot(),
+    stop: async () => {
+      for (const inst of state.instances.values()) {
+        await inst.stop();
+      }
+      state.clear();
+    }
+  };
 }

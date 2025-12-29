@@ -1,26 +1,26 @@
+// video/videoInstance.js
 import { launchChrome } from './chromeLauncher.js';
 
 export class VideoInstance {
-  constructor({ streamId, flight, source, video }) {
+  constructor({ streamId, device, flightId, tokenAccess }) {
     this.streamId = streamId;
-    this.flight = flight;
-    this.source = source;
-    this.video = video;
+    this.device = device;
+    this.flightId = flightId;
+    this.tokenAccess = tokenAccess;
 
     this.proc = null;
-    this.statusCb = null;
+    this.cb = null;
   }
 
   onStatus(cb) {
-    this.statusCb = cb;
+    this.cb = cb;
   }
 
   emit(state, reason = null) {
-    if (!this.statusCb) return;
-
-    this.statusCb({
+    if (!this.cb) return;
+    this.cb({
       streamId: this.streamId,
-      logicalCameraId: this.source.logicalId,
+      cameraId: this.device.id,
       state,
       reason,
       ts: Date.now()
@@ -32,10 +32,9 @@ export class VideoInstance {
 
     try {
       this.proc = launchChrome({
-        devicePath: this.source.physical.devicePath,
-        flightUrl: this.flight.url,
-        accessToken: this.flight.accessToken,
-        video: this.video
+        devicePath: this.device.path,
+        flightId: this.flightId,
+        tokenAccess: this.tokenAccess
       });
 
       this.proc.on('exit', () => {

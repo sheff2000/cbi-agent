@@ -41,6 +41,12 @@ export function handleControlMessage(ws, packet) {
                 return;
             }
             // попытка запустить стрим
+            bus.emit(EVENTS.AGENT_VIDEO_START, {
+                device: res.device,
+                flightId: packet.data.flightId,
+                tokenAccess: packet.data.tokenAccess,
+            });
+
             // может лучше событием / может прямым запуском
             //videoService.startStream({
             //    device: res.device,
