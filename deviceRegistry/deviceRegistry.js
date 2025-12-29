@@ -2,6 +2,7 @@
 
 import { RegistryState } from './registryState.js';
 import { buildDefaultState } from './registryMapper.js';
+import { log } from '../logger.js';
 
 export class DeviceRegistry {
   constructor({ deviceMonitor, storage }) {
@@ -14,9 +15,10 @@ export class DeviceRegistry {
   async init() {
     // 1. пробуем загрузить сохранённую карту
     const saved = await this.storage.load();
-
+    log(`[DEVICE REGISTERY] INIT ... saved - ${JSON.stringify(saved, null, 2)}`);
     // 2. берём физический snapshot
     const snapshot = this.deviceMonitor.getSnapshot();
+    log(`[DEVICE REGISTERY] INIT .... snapshot - ${JSON.stringify(snapshot, null, 2)}`);
 
     if (saved) {
       // пока просто применяем как есть
@@ -37,4 +39,86 @@ export class DeviceRegistry {
   save() {
     this.storage.save(this.state);
   }
+
+  handlePhysicalChanges(changes) {
+      let dirty = false;
+
+      for (const ch of changes) {
+        const { type, path, event } = ch;
+
+        const list = this.state.devices[type];
+        if (!list) continue;
+
+        if (event === 'added') {
+          // ищем logical, который был offline и ждал этот path
+          let found = list.find(d => d.path === path);
+
+          if (found) {
+            found.status = 'online';
+            dirty = true;
+            continue;
+          }
+
+          // новый physical → создаем новый logical
+          const nextId = `${type === 'video' ? 'camera' : 'rc'}${list.length + 1}`;
+
+          list.push({
+            id: nextId,
+            type,
+            path,
+            status: 'online'
+          });
+
+          // по умолчанию кладем в control1
+          const ctrl = this.state.controls.find(c => c.id === 'control1');
+          if (ctrl) {
+            if (type === 'video') ctrl.cameras.push(nextId);
+            else ctrl.rc.push(nextId);
+          }
+
+          dirty = true;
+        }
+
+        if (event === 'removed') {
+          const found = list.find(d => d.path === path);
+          if (found) {
+            found.status = 'offline';
+            dirty = true;
+          }
+        }
+      }
+
+      if (dirty) {
+        this.save();
+      }
+    }
+  requestVideo({ controlId, cameraId }) {
+      const control = this.state.controls.find(c => c.id === controlId);
+      if (!control) {
+        return { ok: false, reason: 'control_not_found' };
+      }
+
+      if (!control.cameras.includes(cameraId)) {
+        return { ok: false, reason: 'camera_not_in_control' };
+      }
+
+      const cam = this.state.devices.video.find(d => d.id === cameraId);
+      if (!cam) {
+        return { ok: false, reason: 'camera_not_found' };
+      }
+
+      if (cam.status !== 'online') {
+        return { ok: false, reason: 'camera_offline' };
+      }
+
+      return {
+        ok: true,
+        device: {
+          id: cam.id,
+          type: cam.type,
+          path: cam.path
+        }
+      };
+    }
+
 }

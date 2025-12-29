@@ -16,11 +16,27 @@ deviceRegistry/
 Давать это состояние по запросу
 Обновлять состояние при изменениях
 
-примерное API
+# примерное API
+
+### handlePhysicalChanges(changes)
+  Принять изменения от deviceMonitor и обновить логическое состояние, 
+  ничего не запуская и не останавливая.
+
+    #### Когда вызывается
+      - после deviceMonitor.refresh()
+      - либо по событию (позже)
+
+### requestVideo({ controlId, cameraId })
+  Разрешение доступа, не запуск стрима!
+  Возвращает
+    - либо { ok: false, reason }
+    - либо { ok: true, device }
+
+### requestRC({ controlId, rcId })
+  тоже но для управления, а не камеры!
+
 getDevices()
 getControls()
-requestVideo()
-requestRC()
 
 Control — это логическая точка управления
  - может содержать несколько камер / блоков управления
@@ -31,10 +47,10 @@ JSON карта
 {
   "devices": {
     "video": [
-      { "id": "camera1", "type": "video", "status": "online" }
+      { "id": "camera1", "type": "video", "status": "online", path:'' }
     ],
     "serial": [
-      { "id": "rc1", "type": "serial", "status": "online" }
+      { "id": "rc1", "type": "serial", "status": "online", path:'' }
     ]
   },
   "controls": [
@@ -50,7 +66,7 @@ JSON карта
 Работа с сервисом (примерная)
 ######
 Ининциализация 
-init({ deviceMonitor })
+init({ deviceMonitor, storage })
 
 1. Получить список и состояние устройств
 getState(): {
@@ -72,7 +88,7 @@ getState(): {
 {
   id: 'control1',
   cameras: ['camera1', 'camera2'],
-  rc: ['rc1']
+  rc: ['rc1', 'rc2']
 }
 
 # DEVICE_LIST с фронта
