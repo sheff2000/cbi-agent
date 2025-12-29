@@ -89,6 +89,12 @@ export async function startAll({ helloData }) {
 
     // Сервис трансляции видео с камеры - пока не нужен
     // await startService('camera', initCameraService, {});
+    /*await startService(
+        servicesList.video,
+        initVideoService,
+        {}
+    );*/
+
   
     // Запуск по событиям
     // Сервисы котрые будут запускатся после появления нужного события
