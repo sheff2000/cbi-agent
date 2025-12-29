@@ -29,6 +29,8 @@ await deviceRegistry.init();
 
 const registryState = deviceRegistry.getState();
 
+log(`[CAPS] ${JSON.stringify(registryState, null, 2)}`);
+
 const caps = deviceMonitor.getCaps();
 const hardware_id =  getHardwareId({ mode: AGENT_MODE });
 //{ Для запуска на локалке пример ключей
