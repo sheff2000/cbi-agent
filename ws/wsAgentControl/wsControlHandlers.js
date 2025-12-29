@@ -5,6 +5,8 @@ import { log, warn } from '../../logger.js';
 import { bus } from '../../core/bus.js';
 import { EVENTS } from '../../core/events.js';
 
+import { deviceRegistry } from '../../deviceRegistry/index.js';
+
 export function handleControlMessage(ws, packet) {
     if (!packet || !packet.type) return;
 
@@ -25,7 +27,29 @@ export function handleControlMessage(ws, packet) {
             break; // просто игнорируем
 
         case EVENTS.AGENT_VIDEO_START:
-            bus.emit(EVENTS.AGENT_VIDEO_START, {packet});
+            const controlId = packet.data.controlId;
+            const cameraId  = packet.data.cameraId;
+            // провверем наличие доступа к камере
+            const res = deviceRegistry.requestVideo({
+                controlId,
+                cameraId
+            });
+
+            if (!res.ok) {
+                // отправка ошибки - тип пакета надо другой!
+                ws.send({ type: 'error', reason: res.reason });
+                return;
+            }
+            // попытка запустить стрим
+            // может лучше событием / может прямым запуском
+            //videoService.startStream({
+            //    device: res.device,
+            //    flightId: packet.data.flightId,
+            //    tokenAccess: packet.data.tokenAccess,
+            //});
+
+            // старый подход - пока решаем как дальше
+            // bus.emit(EVENTS.AGENT_VIDEO_START, {packet});
             log(`[WS CONTROL] Запрос на видео. Пакет:${JSON.stringify(packet, null,2)}`);
             break;
         case EVENTS.AGENT_VIDEO_STOP:
