@@ -27,6 +27,7 @@ export function buildDefaultState(physicalSnapshot) {
     state.devices.video.push({
       id: `camera${camIndex++}`,
       type: 'video',
+      path: cam.path,
       status: cam.status || 'online',
     });
   }
@@ -35,6 +36,7 @@ export function buildDefaultState(physicalSnapshot) {
     state.devices.serial.push({
       id: `rc${rcIndex++}`,
       type: 'serial',
+      path: rc.path,
       status: rc.status || 'online',
     });
   }
