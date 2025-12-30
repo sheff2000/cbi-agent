@@ -113,7 +113,7 @@ export function initWS({ url, helloData, onStateChange, onFatalError }) {
 
     bus.on(EVENTS.WS_AUTH_OK, () => {
         // авторизация прошла успешно 
-        state.wsIsAuthorized = true;
+        //state.wsIsAuthorized = true;
         // запуск таймеров на отправку хербертов и метрики
         startTimers(client);
     })

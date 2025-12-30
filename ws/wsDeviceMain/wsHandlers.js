@@ -12,6 +12,7 @@ import { updateSource } from '../../core/rcBuffer.js';
 // соблюдаем максимальную изолированность! 
 import { services } from '../../core/serviceRegistry.js';
 import { servicesList } from '../../core/serviceName.js';
+import { json } from 'stream/consumers';
 
 
 export function handleServerMessage(ws, packet) {
@@ -21,7 +22,7 @@ export function handleServerMessage(ws, packet) {
 
   const t = packet?.type;
   const msg = packet?.msgError;
-
+  log(`[WS] RECEIVED PACJET TYPE .... ${t} .... packet ... ${JSON.stringify(msg,null,2)}`);
   try {
     switch (t) {
       case 'msg':
@@ -102,8 +103,12 @@ export function handleServerMessage(ws, packet) {
         //await restartConnections();
         break;
 
+      case 'pong':
+
+        break;
+
       default:
-        //log(`[WS] неизвестный тип: ${t}`);
+        log(`[WS] неизвестный тип: ${t}`);
     }
   } catch (e) {
     //log(`[WS] ERROR | packet .... ${JSON.stringify(packet, null, 2)}`);
@@ -157,7 +162,7 @@ function wsHandler_MSG(ws, packet)
         warn(`[WS] Packet with type MSG is undefinde ... ${packet.msgError}`);
         break;
     }
-  } catch {
-     warn(`[WS] ошибка в wsHandler_MSG: ${e.message}`);
+  } catch(e) {
+     warn(`[WS AUTH] ошибка в wsHandler_MSG: ${e}`);
   }
 }
