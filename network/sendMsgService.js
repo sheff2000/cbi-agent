@@ -35,13 +35,25 @@ export function initSendMsgService() {
         safeSendJSON(ws, packet);
     });
 
+    // это не корректная отпарвка !!!
     // Регулярная отправка метрики Агента (загрузка проца/памяти/сети)
-    bus.on(EVENTS.RESPONSE_METRICA, ({ ws, msg }) => {
+    //bus.on(EVENTS.RESPONSE_METRICA, ({ ws, msg }) => {
         //log(`[SEND SERVICE] METRICA RESP .... `);//${JSON.stringify(msg, null, 2)}`);
-        if (!ws)
-            warn('[SEND SERVICE] METRICE RESP ... ws undefinde');
-        safeSendJSON(ws, msg);
-    })
+    //    if (!ws)
+    //        warn('[SEND SERVICE] METRICE RESP ... ws undefinde');
+    //    safeSendJSON(ws, msg);
+    //})
+
+    bus.on(EVENTS.METRICS_READY, metrics => {
+        const ws = services.get(servicesList.metrikaAgentWS)?.getSocket?.();
+        if (!ws) return;
+
+        safeSendJSON(ws, {
+            type: 'agent::metriks',
+            data: metrics
+        });
+    });
+
 
     bus.on(EVENTS.SEND_CONTROL_PACKET, ({ ws, msg }) => {
         ws.sendJSON(msg);

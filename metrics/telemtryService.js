@@ -12,7 +12,6 @@ import { services } from '../core/serviceRegistry.js';
 
 let timer = null;
 let intervalMs = connectConfig.METRICS_INTERVAL_MS;
-let client = null; // ссылка на WS-клиент
 
 function start({url, intervalMs}) {
   log('[METRIKA] STart TIMER ....');
@@ -22,17 +21,9 @@ function start({url, intervalMs}) {
     try {
       const metrics = collectMetrics(extractHost(url));
 
-      if (client) { //client?.isOpen()
         //log('[METRIKA] отправка данных метрики на сервер... ', metrics);
-        bus.emit(EVENTS.RESPONSE_METRICA, {
-          ws: client,
-          msg: {
-            type: 'DEVICE_METRICS', 
-            data: metrics,
-          }
-        });
-        //client.sendJSON({ type: 'DEVICE_METRICS', data: metrics });
-      }
+        bus.emit(EVENTS.METRICS_READY, metrics);
+       
     } catch (e) {
       warn('[TELEMETRY] ошибка сбора метрик:', e.message);
     }
@@ -50,10 +41,9 @@ export function initTelemetryService() {
   //client = wsClient;
   intervalMs = connectConfig.METRICS_INTERVAL_MS;
 
-  bus.on(EVENTS.WS_AUTH_OK, ({ ws }) =>{
+  bus.on(EVENTS.AGENT_METRIKA_AUTH_OK, () =>{
     //log('[TELEMETRY] ws auth ok ... start');
       stop();
-      client = ws;
       start(
       {
           url: connectConfig.SERVER_URLWS,  // для замера пинга
@@ -62,6 +52,9 @@ export function initTelemetryService() {
       //log('[METRIKA] START... ');
   });
   // тормозим отправку метрики если что-то не так
+  bus.on(EVENTS.AGENT_METRIKA_AUTH_FAILED, () => {
+    stop();
+  });
   bus.on(EVENTS.WS_AUTH_FAILED, () => {
     log('[METRIKA] Ошибка атворизации WS ... останавливаем метрику');
     stop()
@@ -73,11 +66,6 @@ export function initTelemetryService() {
   //bus.on(EVENTS.WS_ENROLL_REQUIRED, () => stop());
   //bus.on(EVENTS.WS_DEVICE_PROVISION, () => stop());
   //bus.on(EVENTS.WS_AUTH_REQUIRED, () => stop());
-
-  bus.on(EVENTS.WS_CLOSED, () => {
-    log('[METRIKA] Обрыв коннекта WS ... останавливаем метрику');
-    stop()
-  }); // обрыв соединения
 
   // Вернуть интерфейс для управления вручную (если нужно)
   return {
