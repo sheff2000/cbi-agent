@@ -19,12 +19,15 @@ export const EVENTS = {
   AGENT_CONTROL_AUTH_FAILED: "AGENT_CONTROL_AUTH_FAILED",
   CONTROL_COMMAND_FROM_SERVER: "CONTROL_COMMAND_FROM_SERVER",
 
+  AGENT_METRIKA_AUTH_OK: "AGENT_METRIKA_AUTH_OK",
+  AGENT_METRIKA_AUTH_FAILED: "AGENT_METRIKA_AUTH_FAILED",
+
   RTC_VIDEO_SIGNAL: 'RTC_video_signal', // пакет RTC видео {ice/offer ...}
 
   // События - ОТВЕТЫ на фронт/сервер
   RESPONSE_CAMERA: 'RESPONSE_CAMERA', // исходящие от видео сервиса (ice/stats)
   RESPONSE_METRICA: 'RESPONSE_METRIKA', // отправка метрики самого Агента (CPU/Memory/Network...)
-
+  METRICS_READY: 'METRICS_READY', // метрика готова к отправке
 
   VIDEO_START: 'VIDEO_START',
   VIDEO_STOP: 'VIDEO_STOP',
