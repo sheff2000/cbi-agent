@@ -7,7 +7,8 @@ export const servicesList = {
     controlWS: 'controlWS', 
     // wsAgent/control - сервис управляния агентом с фронта для новых полетных комнат  и н только
     controlAgentWS: 'controlAgentWS', 
-
+    metrikaAgentWS: 'metrikaAgentWS',
+    
     // Сервис отправки сообщений во внешний мир
     // работает по событиям - отправляет что прислали туда куда указано в событии
     // можно вставлть "костыили" по типу изменния офрматов сообщения и тд 
