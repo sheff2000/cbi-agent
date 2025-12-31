@@ -18,6 +18,41 @@ deviceRegistry/
 
 # примерное API
 
+### getState()
+  основной интерфейс - получение актуальной карты устройств и их состояний
+  Пример снимка состояния
+  "devices": {
+    "video": [
+      {
+        "id": "camera1",
+        "type": "video",
+        "path": "/dev/video0",
+        "status": "online",
+        "inUse": false
+      }
+    ],
+    "serial": [
+      {
+        "id": "rc1",
+        "type": "serial",
+        "path": "/dev/ttyUSB0",
+        "status": "online",
+        "inUse": false
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "control1",
+      "cameras": [
+        "camera1"
+      ],
+      "rc": [
+        "rc1"
+      ]
+    }
+  ]
+
 ### handlePhysicalChanges(changes)
   Принять изменения от deviceMonitor и обновить логическое состояние, 
   ничего не запуская и не останавливая.

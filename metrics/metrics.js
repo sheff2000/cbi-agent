@@ -6,6 +6,7 @@ import os from 'os';
 import fs from 'fs';
 import { execSync } from 'child_process';
 import { log, warn } from '../logger.js';
+import { deviceRegistry } from '../deviceRegistry/index.js';
 
 // внутренний кэш для расчёта скорости
 const prevNet = new Map();
@@ -18,6 +19,12 @@ export function collectMetrics(serverHost = null) {
   const total = os.totalmem();
   const free = os.freemem();
   const used = total - free;
+
+  // -----------------------------
+  // состояние подключенных устройств
+  // -----------------------------
+  const stateDevice = deviceRegistry.getState();
+  log(`[METRIKA] GET DEVICE STATE .... ${JSON.stringify(stateDevice, null,2)} `);
 
   // -------------------------------
   // 1️⃣ CPU и память
