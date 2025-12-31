@@ -134,7 +134,7 @@ export function createAgentWS({
                 //log(`[WS] SEND HELLO to DEVICE ... ${JSON.stringify(helloData,null,2)}`);
                 
                 // для wsagent/control пакет авторизации
-                if (name === 'CONTROL_WS')
+                if (name === 'CONTROL_WS' || name === 'METRIKA_WS')
                     sendJSON( helloData );
                 else
                     sendJSON({ type: 'DEVICE_HELLO', data: helloData });
