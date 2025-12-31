@@ -7,6 +7,7 @@ import fs from 'fs';
 import { execSync } from 'child_process';
 import { log, warn } from '../logger.js';
 import { deviceRegistry } from '../deviceRegistry/index.js';
+import { getRuntime } from '../core/runtime/runtimeRegistry.js';
 
 // внутренний кэш для расчёта скорости
 const prevNet = new Map();
@@ -23,8 +24,14 @@ export function collectMetrics(serverHost = null) {
   // -----------------------------
   // состояние подключенных устройств
   // -----------------------------
-  const stateDevice = deviceRegistry.getState();
-  log(`[METRIKA] GET DEVICE STATE .... ${JSON.stringify(stateDevice, null,2)} `);
+  const deviceLoop = getRuntime('deviceLoop');
+  const stateDevice = {
+      devices: deviceRegistry.getState(),
+      deviceLoop: deviceLoop
+      ? deviceLoop.getHealth()
+      : { running: false, reason: 'not_registered' },
+  };
+  //log(`[METRIKA] GET DEVICE STATE .... ${JSON.stringify(stateDevice, null,2)} `);
 
   // -------------------------------
   // 1️⃣ CPU и память
@@ -121,6 +128,7 @@ export function collectMetrics(serverHost = null) {
     disk,
     net: netStats,
     ping_ms: pingMs,
+    stateDevice: stateDevice,
     uptime_s: Math.round(os.uptime()),
     timestamp: new Date().toISOString()
   };
