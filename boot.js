@@ -4,6 +4,8 @@
 import os from 'os';
 import { log } from './logger.js';
 
+import { DeviceLoop } from './core/runtime/deviceLoop.js';
+
 // config services
 import { initConnectConfig,connectConfig } from './config/modules/connect.js';
 import { initVideoConfig, videoConfig } from './config/modules/videoConfig.js';
@@ -26,6 +28,15 @@ log('[BOOT] запуск агента...');
 // старт мониторинга устройств
 await deviceMonitor.start();
 await deviceRegistry.init();
+
+// запуск device loop
+const deviceLoop = new DeviceLoop({
+  deviceMonitor,
+  deviceRegistry,
+  intervalMs: 2000, // наверное надо вынести в конфиг
+});
+
+deviceLoop.start();
 
 const registryState = deviceRegistry.getState();
 
@@ -86,4 +97,14 @@ await startAll({ helloData: helloData });
 process.on('SIGUSR2', async () => {
   // рестарта по сигналу
   await restartAll({ helloData: helloData });
+});
+
+process.on('SIGINT', () => {
+  deviceLoop.stop();
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  deviceLoop.stop();
+  process.exit(0);
 });
