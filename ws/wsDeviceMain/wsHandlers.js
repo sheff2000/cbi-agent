@@ -22,7 +22,7 @@ export function handleServerMessage(ws, packet) {
 
   const t = packet?.type;
   const msg = packet?.msgError;
-  log(`[WS] RECEIVED PACJET TYPE .... ${t} .... packet ... ${JSON.stringify(msg,null,2)}`);
+  //log(`[WS] RECEIVED PACJET TYPE .... ${t} .... packet ... ${JSON.stringify(msg,null,2)}`);
   try {
     switch (t) {
       case 'msg':
