@@ -5,6 +5,7 @@ import os from 'os';
 import { log } from './logger.js';
 
 import { DeviceLoop } from './core/runtime/deviceLoop.js';
+import { registerRuntime } from './core/runtime/runtimeRegistry.js';
 
 // config services
 import { initConnectConfig,connectConfig } from './config/modules/connect.js';
@@ -37,6 +38,7 @@ const deviceLoop = new DeviceLoop({
 });
 
 deviceLoop.start();
+registerRuntime('deviceLoop', deviceLoop);
 
 const registryState = deviceRegistry.getState();
 
