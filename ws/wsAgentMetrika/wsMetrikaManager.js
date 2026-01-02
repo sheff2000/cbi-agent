@@ -23,7 +23,7 @@ export function initWS_MetrikaAgent({
     const creds = loadDeviceCreds();
 
     const helloData = {
-        type: 'metrika::auth',
+        type: 'auth',
         data: {
                 role: 'agent',
                 device_id: creds.device_id,
@@ -37,12 +37,12 @@ export function initWS_MetrikaAgent({
 
     const client = createAgentWS({
         url,
-        //helloData: helloData, // В metrika-канале нет DEVICE_HELLO
+        helloData: helloData, // В metrika-канале нет DEVICE_HELLO
 
         onMsg: ({ ws, packet }) => handleMetrikaMessage(ws, packet),
 
         onOpen: () => {
-            //log('[METRIKA_WS] соединение установлено. Отправляю AUTH');
+            log('[METRIKA_WS] соединение установлено');
         },
 
         onClose: () => {

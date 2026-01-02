@@ -36,12 +36,12 @@ export function initWS_ControlAgent({
 
     const client = createAgentWS({
         url,
-        //helloData: helloData, // В control-канале нет DEVICE_HELLO
+        helloData: helloData, // В control-канале нет DEVICE_HELLO
 
         onMsg: ({ ws, packet }) => handleControlMessage(ws, packet),
 
         onOpen: () => {
-            log('[CONTROL_WS] соединение установлено. Отправляю AUTH');
+            log('[CONTROL_WS] соединение установлено');
             //log(`device_id - ${JSON.stringify(creds, null, 2)}`);
             /*client.sendJSON({
                 type: 'auth',

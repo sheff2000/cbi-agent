@@ -28,6 +28,7 @@ export const EVENTS = {
   RESPONSE_CAMERA: 'RESPONSE_CAMERA', // исходящие от видео сервиса (ice/stats)
   RESPONSE_METRICA: 'RESPONSE_METRIKA', // отправка метрики самого Агента (CPU/Memory/Network...)
   METRICS_READY: 'METRICS_READY', // метрика готова к отправке
+  SEND_CONTROL_PACKET:'SEND_CONTROL_PACKET', // отправка ACK от RC
 
   VIDEO_START: 'VIDEO_START',
   VIDEO_STOP: 'VIDEO_STOP',

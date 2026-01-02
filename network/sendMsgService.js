@@ -37,6 +37,15 @@ export function initSendMsgService() {
         safeSendJSON(ws, packet);
     });
 
+    bus.emit(EVENTS.SEND_CONTROL_PACKET, {
+        ws: services.get(servicesList.rcWS),
+        msg: {
+            type: 'RC_ACK',
+            data: { ok: true }
+        }
+    });
+
+
     // это не корректная отпарвка !!!
     // Регулярная отправка метрики Агента (загрузка проца/памяти/сети)
     //bus.on(EVENTS.RESPONSE_METRICA, ({ ws, msg }) => {

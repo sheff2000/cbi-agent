@@ -13,7 +13,7 @@ import { EVENTS } from './events.js';
 import { initWS } from '../ws/wsDeviceMain/wsManager.js';
 import { initWS_ControlAgent } from '../ws/wsAgentControl/wsControlManager.js';
 import { initWS_MetrikaAgent } from '../ws/wsAgentMetrika/wsMetrikaManager.js';
-import { initWS_RC } from '../ws/wsAgentRc/wsRcManager.js';
+import { initWS_RCAgent } from '../ws/wsAgentRc/wsRcManager.js';
 
 import { initSendMsgService } from '../network/sendMsgService.js';
 import { initTelemetryService } from '../metrics/telemtryService.js';
@@ -119,6 +119,16 @@ export async function startAll({ helloData }) {
         if (!isServiceRunning(servicesList.metrikaAgentWS)) {
             const controlUrl = `${connectConfig.SERVER_URLWS.replace(/\/$/, '')}/wsAgent/metrika`;
             await startService(servicesList.metrikaAgentWS, initWS_MetrikaAgent, {
+                url: controlUrl,
+                onStateChange: st => log(`[metrikaAgentWS] state=${st}`),
+                onFatalError: e => warn(`[metrikaAgentWS] fatal: ${e.message}`)
+            });
+        }
+
+        // запускаем канал RC
+        if (!isServiceRunning(servicesList.rcWS)) {
+            const controlUrl = `${connectConfig.SERVER_URLWS.replace(/\/$/, '')}/wsAgent/rc`;
+            await startService(servicesList.rcWS, initWS_RCAgent, {
                 url: controlUrl,
                 onStateChange: st => log(`[metrikaAgentWS] state=${st}`),
                 onFatalError: e => warn(`[metrikaAgentWS] fatal: ${e.message}`)
