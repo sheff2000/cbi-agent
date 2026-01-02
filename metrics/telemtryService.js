@@ -14,15 +14,15 @@ let timer = null;
 let intervalMs = connectConfig.METRICS_INTERVAL_MS;
 
 function start({url, intervalMs}) {
-  log('[METRIKA] STart TIMER ....');
+  //log('[METRIKA] STart TIMER ....');
   // url - для получения времени пинга на э тот адрес
   if (timer) clearInterval(timer);
   timer = setInterval(() => {
     try {
       const metrics = collectMetrics(extractHost(url));
 
-        //log('[METRIKA] отправка данных метрики на сервер... ', metrics);
-        bus.emit(EVENTS.METRICS_READY, metrics);
+      //log('[METRIKA] отправка данных метрики на сервер... ', metrics);
+      bus.emit(EVENTS.METRICS_READY, metrics);
        
     } catch (e) {
       warn('[TELEMETRY] ошибка сбора метрик:', e.message);
@@ -41,7 +41,7 @@ export function initTelemetryService() {
   //client = wsClient;
   intervalMs = connectConfig.METRICS_INTERVAL_MS;
 
-  bus.on(EVENTS.AGENT_METRIKA_AUTH_OK, () =>{
+  bus.on(EVENTS.WS_AUTH_OK, () =>{ //AGENT_METRIKA_AUTH_OK
     //log('[TELEMETRY] ws auth ok ... start');
       stop();
       start(
@@ -49,7 +49,7 @@ export function initTelemetryService() {
           url: connectConfig.SERVER_URLWS,  // для замера пинга
           intervalMs: intervalMs,
       });
-      //log('[METRIKA] START... ');
+      log('[METRIKA] START... ');
   });
   // тормозим отправку метрики если что-то не так
   bus.on(EVENTS.AGENT_METRIKA_AUTH_FAILED, () => {

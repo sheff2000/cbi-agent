@@ -9,7 +9,6 @@ export function handleMetrikaMessage(ws, packet) {
     if (!packet || !packet.type) return;
 
     switch (packet.type) {
-
         case 'metrika::auth::ok':
             log('[METRIKA_WS] авторизация успешна');
             bus.emit(EVENTS.AGENT_METRIKA_AUTH_OK);

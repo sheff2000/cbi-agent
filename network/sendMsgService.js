@@ -16,7 +16,9 @@
 
 import { bus } from '../core/bus.js';
 import { EVENTS } from '../core/events.js';
+import { services } from '../core/serviceRegistry.js';
 import { log, warn } from '../logger.js';
+import { servicesList } from '../core/serviceName.js';
 
 export function initSendMsgService() {
 
@@ -45,6 +47,18 @@ export function initSendMsgService() {
     //})
 
     bus.on(EVENTS.METRICS_READY, metrics => {
+        //log('[SEND MSG] send metrika ... ');
+        
+        // вынуждены метрику гнать еще и на главный канал ws/device
+        
+        const wsDevice = services.get(servicesList.controlWS)?.getSocket?.();
+        if (!wsDevice) return;
+        //log(`[SEND METRIK] WS DEVIEC ${JSON.stringify(metrics)}`);
+        safeSendJSON(wsDevice, {
+            type: 'DEVICE_METRICS',
+            data: metrics
+        });
+
         const ws = services.get(servicesList.metrikaAgentWS)?.getSocket?.();
         if (!ws) return;
 
@@ -52,6 +66,8 @@ export function initSendMsgService() {
             type: 'agent::metriks',
             data: metrics
         });
+        
+
     });
 
 
