@@ -62,6 +62,7 @@ VIDEO_STREAM_STATUS
   reason,
   ts
 }
+```
 
 ## Задача сервиса
     - запускает браузер

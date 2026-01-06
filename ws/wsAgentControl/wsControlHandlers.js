@@ -37,7 +37,8 @@ export function handleControlMessage(ws, packet) {
 
             if (!res.ok) {
                 // отправка ошибки - тип пакета надо другой!
-                ws.send({ type: 'error', reason: res.reason });
+                ws.send(JSON.stringify({ type: 'error', reason: res.reason }));
+
                 return;
             }
             // попытка запустить стрим

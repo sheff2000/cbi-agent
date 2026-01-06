@@ -147,22 +147,26 @@ export function createAgentWS({
 
             ws.on('pong', () => { alive = true; emit('pong'); });
 
-            ws.on('message', (buf) => {
-            try {
-                const pkt = JSON.parse(buf.toString('utf8'));
+            ws.on('message', (data) => {
+                //console.log('typeof:', typeof data);
+                //console.log('isBuffer:', Buffer.isBuffer(data));
+                //console.log('constructor:', data?.constructor?.name);
+                try {
+                    
+                    const pkt = safeParse(data);//JSON.parse(text);
 
-                if (!pkt || typeof pkt !== 'object') {
-                warn(`[${name}] получен некорректный пакет (тип: ${typeof pkt})`);
-                return;
+                    if (!pkt || typeof pkt !== 'object') {
+                        warn(`[${name}] некорректный пакет`);
+                        return;
+                    }
+
+                    onMsg?.({ ws, packet: pkt });
+
+                } catch (e) {
+                    warn(`[${name}] ошибка парсинга сообщения: ${e.message}`);
                 }
+                });
 
-                onMsg?.({ ws, packet: pkt });
-                //emit('message', pkt);
-
-            } catch (e) {
-                warn(`[${name}] ошибка парсинга сообщения: ${e.message}`);
-            }
-            });
 
 
             ws.on('close', () => {
@@ -189,6 +193,23 @@ export function createAgentWS({
             try { ws?.close(); } catch {}
             stopPing();
             cleanup();
+        }
+
+        function safeParse(raw) {
+            try {
+                if (typeof raw === 'string') {
+                return JSON.parse(raw);
+                }
+                if (Buffer.isBuffer(raw)) {
+                return JSON.parse(raw.toString('utf8'));
+                }
+
+                // ВСЁ ОСТАЛЬНОЕ — ОШИБКА
+                warn('WS', 'Non-transport message received', typeof raw);
+                return null;
+            } catch {
+                return null;
+            }
         }
 
         function getSocket() {
