@@ -95,6 +95,7 @@ export class DeviceRegistry {
       }
     }
   requestVideo({ controlId, cameraId }) {
+    log(`[CONTROL] Video packet check ... controlId: ${controlId} | camera: ${cameraId}`);
       const control = this.state.controls.find(c => c.id === controlId);
       if (!control) {
         return { ok: false, reason: 'control_not_found' };
