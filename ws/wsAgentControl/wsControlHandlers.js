@@ -10,6 +10,10 @@ import { deviceRegistry } from '../../deviceRegistry/index.js';
 export function handleControlMessage(ws, packet) {
     if (!packet || !packet.type) return;
 
+    let resDevice;
+    let controlId;
+    let cameraId;
+
     switch (packet.type) {
 
         case 'auth::ok':
@@ -27,25 +31,30 @@ export function handleControlMessage(ws, packet) {
             break; // просто игнорируем
 
         case EVENTS.AGENT_VIDEO_START:
-            const controlId = packet.data.controlId;
-            const cameraId  = packet.data.cameraId;
+            log(`[CONTROL] VIDEO START .... ${JSON.stringify(packet,null,2)}`);
+            controlId = packet.data.controlId;
+            cameraId  = packet.data.cameraId;
             // провверем наличие доступа к камере
-            const res = deviceRegistry.requestVideo({
+            resDevice = deviceRegistry.requestVideo({
                 controlId,
                 cameraId
             });
 
-            if (!res.ok) {
+            if (!resDevice.ok) {
                 // отправка ошибки - тип пакета надо другой!
-                ws.send(JSON.stringify({ type: 'error', reason: res.reason }));
+                log(`[CONTROL] ERROR VIDEO START ... ${resDevice.reason}`);
+                ws.send(JSON.stringify({ type: 'error', reason: resDevice.reason }));
 
                 return;
             }
             // попытка запустить стрим
             bus.emit(EVENTS.AGENT_VIDEO_START, {
-                device: res.device,
+                device: resDevice.device,
+                controlId: controlId,
+                cameraId: cameraId,
+                flightUrl: packet.data.flightUrl,
                 flightId: packet.data.flightId,
-                tokenAccess: packet.data.tokenAccess,
+                tokenAccess: packet.data.accessToken,
             });
 
             // может лучше событием / может прямым запуском
@@ -59,8 +68,28 @@ export function handleControlMessage(ws, packet) {
             // bus.emit(EVENTS.AGENT_VIDEO_START, {packet});
             log(`[WS CONTROL] Запрос на видео. Пакет:${JSON.stringify(packet, null,2)}`);
             break;
+
         case EVENTS.AGENT_VIDEO_STOP:
-            bus.emit(EVENTS.AGENT_VIDEO_STOP, {packet});
+            controlId = packet.data.controlId;
+            cameraId  = packet.data.cameraId;
+            // освобождаем камеру
+            resDevice = deviceRegistry.releaseVideo({
+                cameraId
+            });
+
+            if (!resDevice.ok) {
+                // отправка ошибки - тип пакета надо другой!
+                log(`[CONTROL] ERROR VIDEO STOP ... ${resDevice.reason}`);
+                ws.send(JSON.stringify({ type: 'error', reason: resDevice.reason }));
+
+                return;
+            }
+            // попытка тормознуть стрим
+            bus.emit(EVENTS.AGENT_VIDEO_STOP, {
+                controlId: controlId,
+                cameraId: cameraId
+            });
+
             log(`[WS CONTROL] Запрос остановки видео. Пакет:${JSON.stringify(packet, null,2)}`);
             break;
 

@@ -10,10 +10,15 @@ export async function initVideoService() {
   const state = new VideoState();
 
   bus.on(EVENTS.AGENT_VIDEO_START, async payload => {
-    const { device, flightId, tokenAccess } = payload;
+    const { device, 
+            flightId, 
+            tokenAccess, 
+            cameraId, 
+            controlId,
+            flightUrl } = payload;
 
-    const streamId = `${flightId}:${device.id}`;
-
+    const streamId = `${controlId}:${cameraId}`;
+    log(`[VIDEO] Start ... session: ${streamId} | device: ${JSON.stringify(device,null,2)}`);
     if (state.has(streamId)) {
       warn('[VIDEO] stream already running', streamId);
       return;
@@ -23,6 +28,7 @@ export async function initVideoService() {
       streamId,
       device,
       flightId,
+      flightUrl,
       tokenAccess
     });
 
@@ -38,7 +44,10 @@ export async function initVideoService() {
   });
 
   bus.on(EVENTS.AGENT_VIDEO_STOP, async payload => {
-    const { streamId } = payload;
+    log(`[VIDEO] STOP VIDEO ...`);
+    const { cameraId, controlId } = payload;
+    const streamId = `${controlId}:${cameraId}`;
+    //const { streamId } = payload;
     const inst = state.get(streamId);
     if (!inst) return;
 
