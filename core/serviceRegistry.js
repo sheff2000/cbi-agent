@@ -17,8 +17,8 @@ import { initWS_RCAgent } from '../ws/wsAgentRc/wsRcManager.js';
 
 import { initSendMsgService } from '../network/sendMsgService.js';
 import { initTelemetryService } from '../metrics/telemtryService.js';
+import { initVideoService } from '../videoService/videoService.js';
 
-//import { initVideoService } from '../video/videoService.js';
 //import { initCameraService } from '../camera/cameraManager.js';
 
 // Внутренний список активных сервисов
@@ -82,6 +82,7 @@ export async function startAll({ helloData }) {
     // Запускаем сервис телеметрии агента
     await startService(servicesList.telemetry, initTelemetryService, {});
 
+    await startService(servicesList.videoOnline, initVideoService, {});
     //await startService('rcWS', initWS_RC, {
     //  url: wsRcUrl,
     //  helloData,
