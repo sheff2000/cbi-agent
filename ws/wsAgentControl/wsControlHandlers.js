@@ -55,6 +55,8 @@ export function handleControlMessage(ws, packet) {
                 flightUrl: packet.data.flightUrl,
                 flightId: packet.data.flightId,
                 tokenAccess: packet.data.accessToken,
+                sessionId: packet.data.sessionId,
+                userId: packet.data.requestedBy.userId,
             });
 
             // может лучше событием / может прямым запуском

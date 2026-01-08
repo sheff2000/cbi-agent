@@ -127,6 +127,8 @@ export async function startAll({ helloData }) {
         }
 
         // запускаем канал RC
+        // ТУТ ВОПРОС: количество каналов RC должно соответствовать 
+        //             количеству устройств RC ?
         if (!isServiceRunning(servicesList.rcWS)) {
             const controlUrl = `${connectConfig.SERVER_URLWS.replace(/\/$/, '')}/wsAgent/rc`;
             await startService(servicesList.rcWS, initWS_RCAgent, {
