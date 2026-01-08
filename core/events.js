@@ -32,6 +32,7 @@ export const EVENTS = {
 
   VIDEO_START: 'VIDEO_START',
   VIDEO_STOP: 'VIDEO_STOP',
+  VIDEO_STREAM_STATUS: 'VIDEO_STREAM_STATUS',
   //DEVICE_METRICS: 'DEVICE_METRICS', // регулярная отправка новой метрики устройства (проц, память, время работы)
   
 
@@ -40,5 +41,4 @@ export const EVENTS = {
   AGENT_VIDEO_STOP: 'agent::video::stop',   // запрос на остановку видео трансляции от фронта
 
 };
-
 
