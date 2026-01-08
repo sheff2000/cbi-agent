@@ -2,12 +2,14 @@
 import { launchChrome } from './chromeLauncher.js';
 
 export class VideoInstance {
-  constructor({ streamId, device, flightId, flightUrl, tokenAccess }) {
+  constructor({ streamId, device, flightId, flightUrl, tokenAccess, sessionId, userId }) {
     this.streamId = streamId;
     this.device = device;
     this.flightId = flightId;
     this.flightUrl = flightUrl;
     this.tokenAccess = tokenAccess;
+    this.sessionId = sessionId;
+    this.userId = userId;
 
     this.proc = null;
     this.cb = null;
@@ -36,7 +38,9 @@ export class VideoInstance {
         devicePath: this.device.path,
         flightId: this.flightId,
         flightUrl: this.flightUrl,
-        tokenAccess: this.tokenAccess
+        tokenAccess: this.tokenAccess,
+        sessionId: this.sessionId,
+        userId: this.userId,
       });
 
       this.proc.on('exit', () => {
