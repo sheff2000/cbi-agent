@@ -28,6 +28,15 @@ const EVENT_SCHEMA = {
   [EVENTS.RESPONSE_CAMERA]: {
     required: ['ws', 'msg'],
   },
+  [EVENTS.RTC_VIDEO_SIGNAL]: {
+    required: ['ws', 'packet'],
+  },
+  [EVENTS.CONTROL_COMMAND_FROM_SERVER]: {
+    required: ['ws', 'packet'],
+  },
+  [EVENTS.METRICS_READY]: {
+    required: ['cpu', 'mem', 'net', 'uptime_s', 'timestamp'],
+  },
   [EVENTS.VIDEO_STREAM_STATUS]: {
     required: ['streamId', 'cameraId', 'state', 'ts'],
   },

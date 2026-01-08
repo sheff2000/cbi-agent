@@ -5,6 +5,7 @@
 import { err, log, warn } from '../../logger.js';
 import { bus } from '../../core/bus.js';
 import { EVENTS } from '../../core/events.js';
+import { emitEvent } from '../../core/eventBus.js';
 // глобальный буфер RC потоков и Serial портов для них
 import { updateSource } from '../../core/rcBuffer.js';
 
@@ -89,7 +90,7 @@ export function handleServerMessage(ws, packet) {
       //видео
       case 'RTC_video_signal': {
         //log(`[WS] Пакет для потока видео с фронта ....${JSON.stringify(packet, null, 2)}`);
-        bus.emit(EVENTS.RTC_VIDEO_SIGNAL, 
+        emitEvent(EVENTS.RTC_VIDEO_SIGNAL, 
           {
             packet: packet,
             ws: ws, 
