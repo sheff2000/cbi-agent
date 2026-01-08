@@ -106,13 +106,15 @@ export function initSendMsgService() {
 
 
 function safeSendJSON(ws, msg) {
-    if (!ws || ws.readyState !== 1) {
+    const socket = ws?.getSocket?.() || ws;
+    if (!socket || socket.readyState !== 1) {
         warn('[SEND] попытка отправить JSON в закрытый сокет');
         //warn(`[SEND] была попытка отправить Msg: ${JSON.stringify(msg)}`);
         return;
     }
     try {
-        ws.sendJSON(msg);
+        if (typeof socket.sendJSON === 'function') socket.sendJSON(msg);
+        else socket.send(JSON.stringify(msg));
     } catch (err) {
         warn('[SEND] ошибка отправки JSON:', err);
     }
