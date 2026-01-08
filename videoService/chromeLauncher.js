@@ -5,7 +5,7 @@ import { warn } from '../logger.js';
 
 export function launchChrome({
   devicePath,
-  labelHint = 'usb',
+  labelHint = null,
   flightId,
   flightUrl,
   tokenAccess,
@@ -15,13 +15,16 @@ export function launchChrome({
 
   try {
     const creds = loadDeviceCreds();
+    const cameraHintParam = labelHint
+      ? `&cameraHint=${encodeURIComponent(labelHint)}`
+      : '';
     const url =
       `${flightUrl}` +
       `?token=${tokenAccess}` +
       `&devId=${creds.device_id}` +
       `&userId=${userId}` +
       `&sessionId=${sessionId}` + 
-      `&cameraHint=${labelHint}` + 
+      `${cameraHintParam}` +
       `&cameraId=${encodeURIComponent(devicePath)}`;
 
     const args = [

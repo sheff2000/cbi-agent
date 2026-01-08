@@ -61,13 +61,17 @@ export class DeviceRegistry {
 
           // новый physical → создаем новый logical
           const nextId = `${type === 'video' ? 'camera' : 'rc'}${list.length + 1}`;
+          const snapshot = this.deviceMonitor.getSnapshot();
+          const addedDevice = type === 'video'
+            ? snapshot.video.find(d => d.path === path)
+            : null;
 
           list.push({
             id: nextId,
             type,
             path,
             status: 'online',
-            ...(type === 'video' ? { labelHint: 'usb' } : {}),
+            ...(addedDevice?.labelHint ? { labelHint: addedDevice.labelHint } : {}),
             inUse: false, 
           });
 
