@@ -15,7 +15,9 @@ export async function initVideoService() {
             tokenAccess, 
             cameraId, 
             controlId,
-            flightUrl } = payload;
+            flightUrl,
+            sessionId,
+            userId } = payload;
 
     const streamId = `${controlId}:${cameraId}`;
     log(`[VIDEO] Start ... session: ${streamId} | device: ${JSON.stringify(device,null,2)}`);
@@ -29,7 +31,9 @@ export async function initVideoService() {
       device,
       flightId,
       flightUrl,
-      tokenAccess
+      tokenAccess,
+      sessionId,
+      userId,
     });
 
     inst.onStatus(s => emitVideoStatus(s));
