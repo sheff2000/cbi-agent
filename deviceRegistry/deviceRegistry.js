@@ -67,6 +67,7 @@ export class DeviceRegistry {
             type,
             path,
             status: 'online',
+            ...(type === 'video' ? { labelHint: 'usb' } : {}),
             inUse: false, 
           });
 
@@ -126,7 +127,8 @@ export class DeviceRegistry {
         device: {
           id: cam.id,
           type: cam.type,
-          path: cam.path
+          path: cam.path,
+          labelHint: cam.labelHint,
         }
       };
     }

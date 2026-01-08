@@ -29,6 +29,7 @@ export function buildDefaultState(physicalSnapshot) {
       type: 'video',
       path: cam.path,
       status: cam.status || 'online',
+      labelHint: cam.labelHint,
       inUse: false, // ресурс используется?
     });
   }

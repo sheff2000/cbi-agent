@@ -19,7 +19,8 @@ function normalize(raw) {
     const list = raw[type] || [];
     norm[type] = list.map(d => ({
       path: d.path,
-      status: 'online'
+      status: 'online',
+      ...(type === 'video' ? { labelHint: d.labelHint || 'usb' } : {})
     }));
   }
 
