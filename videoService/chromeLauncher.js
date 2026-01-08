@@ -1,10 +1,17 @@
 // video/chromeLauncher.js
 import { spawn } from 'child_process';
 import { loadDeviceCreds } from '../identity/index.js';
+import { warn } from '../logger.js';
 
-export function launchChrome({ devicePath, flightId, flightUrl, tokenAccess, sessionId, userId }) {
-
-  const labelHint = 'usb';
+export function launchChrome({
+  devicePath,
+  labelHint = 'usb',
+  flightId,
+  flightUrl,
+  tokenAccess,
+  sessionId,
+  userId
+}) {
 
   try {
     const creds = loadDeviceCreds();
@@ -24,15 +31,22 @@ export function launchChrome({ devicePath, flightId, flightUrl, tokenAccess, ses
       '--disable-gpu',
       '--no-sandbox',
       '--enable-features=WebRTC-H264WithOpenH264FFmpeg',
-      '--use-fake-ui-for-media-stream',
       '--allow-file-access-from-files',
       `--user-data-dir=/tmp/chrome_${Date.now()}`,
       url
     ];
 
-     return spawn('chromium', args, { stdio: 'ignore' });
+     const chromeBin = process.env.CHROMIUM_BIN || 'chromium';
+     const proc = spawn(chromeBin, args, { stdio: 'ignore' });
+     proc.on('error', err => {
+       warn(`[VIDEO] chromium spawn failed: ${err.message}`);
+     });
+     return proc;
   }
-  catch {}
+  catch (e) {
+    warn(`[VIDEO] chrome launch failed: ${e?.message || e}`);
+    return null;
+  }
 
 //--disable-gpu иногда ломает H.264 на слабых N100
 // если будут чёрные кадры - убрать флаг

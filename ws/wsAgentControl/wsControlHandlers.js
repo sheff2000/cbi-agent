@@ -3,6 +3,7 @@
 // =============================
 import { log, warn } from '../../logger.js';
 import { bus } from '../../core/bus.js';
+import { emitEvent } from '../../core/eventBus.js';
 import { EVENTS } from '../../core/events.js';
 
 import { deviceRegistry } from '../../deviceRegistry/index.js';
@@ -48,7 +49,7 @@ export function handleControlMessage(ws, packet) {
                 return;
             }
             // попытка запустить стрим
-            bus.emit(EVENTS.AGENT_VIDEO_START, {
+            emitEvent(EVENTS.AGENT_VIDEO_START, {
                 device: resDevice.device,
                 controlId: controlId,
                 cameraId: cameraId,
@@ -87,7 +88,7 @@ export function handleControlMessage(ws, packet) {
                 return;
             }
             // попытка тормознуть стрим
-            bus.emit(EVENTS.AGENT_VIDEO_STOP, {
+            emitEvent(EVENTS.AGENT_VIDEO_STOP, {
                 controlId: controlId,
                 cameraId: cameraId
             });
@@ -104,7 +105,7 @@ export function handleControlMessage(ws, packet) {
         case 'ARM':
         case 'DISARM':
         case 'VIDEO_RESTART':
-            bus.emit(EVENTS.CONTROL_COMMAND_FROM_SERVER, { ws, packet });
+            emitEvent(EVENTS.CONTROL_COMMAND_FROM_SERVER, { ws, packet });
             break;
 
         default:

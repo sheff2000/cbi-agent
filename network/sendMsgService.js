@@ -16,6 +16,7 @@
 
 import { bus } from '../core/bus.js';
 import { EVENTS } from '../core/events.js';
+import { emitEvent } from '../core/eventBus.js';
 import { services } from '../core/serviceRegistry.js';
 import { log, warn } from '../logger.js';
 import { servicesList } from '../core/serviceName.js';
@@ -37,7 +38,7 @@ export function initSendMsgService() {
         safeSendJSON(ws, packet);
     });
 
-    bus.emit(EVENTS.SEND_CONTROL_PACKET, {
+    emitEvent(EVENTS.SEND_CONTROL_PACKET, {
         ws: services.get(servicesList.rcWS),
         msg: {
             type: 'RC_ACK',

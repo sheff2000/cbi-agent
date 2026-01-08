@@ -4,6 +4,7 @@
 import { log, warn } from '../logger.js';
 import { bus } from '../core/bus.js';
 import { EVENTS } from '../core/events.js';
+import { emitEvent } from '../core/eventBus.js';
 import { collectMetrics } from './metrics.js';
 import { connectConfig } from '../config/modules/connect.js';
 import { extractHost } from '../utilits/urlUtilits.js';
@@ -22,7 +23,7 @@ function start({url, intervalMs}) {
       const metrics = collectMetrics(extractHost(url));
 
       //log('[METRIKA] отправка данных метрики на сервер... ', metrics);
-      bus.emit(EVENTS.METRICS_READY, metrics);
+      emitEvent(EVENTS.METRICS_READY, metrics);
        
     } catch (e) {
       warn('[TELEMETRY] ошибка сбора метрик:', e.message);

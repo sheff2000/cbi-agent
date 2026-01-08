@@ -36,12 +36,14 @@ export class VideoInstance {
     try {
       this.proc = launchChrome({
         devicePath: this.device.path,
+        labelHint: this.device.labelHint,
         flightId: this.flightId,
         flightUrl: this.flightUrl,
         tokenAccess: this.tokenAccess,
         sessionId: this.sessionId,
         userId: this.userId,
       });
+      if (!this.proc) throw new Error('launch_failed');
 
       this.proc.on('exit', () => {
         this.emit('error', 'process_exit');

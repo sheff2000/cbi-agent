@@ -1,7 +1,7 @@
 // video/videoEvents.js
-import { bus } from '../core/bus.js';
 import { EVENTS } from '../core/events.js';
+import { emitEvent } from '../core/eventBus.js';
 
 export function emitVideoStatus(payload) {
-  bus.emit(EVENTS.VIDEO_STREAM_STATUS, payload);
+  emitEvent(EVENTS.VIDEO_STREAM_STATUS, payload);
 }
