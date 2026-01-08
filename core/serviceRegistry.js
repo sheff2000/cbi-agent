@@ -29,7 +29,7 @@ let watchdogTimer = null;
 let busHooksRegistered = false;
 
 const WATCHDOG_INTERVAL_MS = Number(process.env.WATCHDOG_INTERVAL_MS || 5000);
-const WATCHDOG_DEAD_MS = Number(process.env.WATCHDOG_DEAD_MS || 30000);
+const WATCHDOG_RESTART_COOLDOWN_MS = Number(process.env.WATCHDOG_RESTART_COOLDOWN_MS || 10000);
 
 /** TO DO:
  *  Поддержка событий на registry уровне
@@ -50,8 +50,8 @@ const WATCHDOG_DEAD_MS = Number(process.env.WATCHDOG_DEAD_MS || 30000);
  */
 
 
-async function startService(name, initFn, args = {}) {
-  serviceDefs.set(name, { initFn, args });
+async function startService(name, initFn, args = {}, options = {}) {
+  serviceDefs.set(name, { initFn, args, options });
   updateHealth(name, { state: 'starting', lastStartAt: Date.now() });
   try {
     // Запускаем функцию и ждём, что она вернёт объект сервиса
@@ -100,25 +100,39 @@ function updateHealth(name, patch) {
   serviceHealth.set(name, { ...current, ...patch });
 }
 
+function canStartService(name, def) {
+  if (def?.options?.restartOnMissing === false) return false;
+  const required = def?.options?.requiresOpenService;
+  if (!required) return true;
+  const dep = serviceHealth.get(required);
+  return dep?.state === 'open';
+}
+
+function shouldRestartOnError(def) {
+  return def?.options?.restartOnError !== false;
+}
+
 function startWatchdog() {
   if (watchdogTimer) return;
   watchdogTimer = setInterval(async () => {
     const now = Date.now();
     for (const [name, def] of serviceDefs) {
       if (!services.has(name)) {
-        await startService(name, def.initFn, def.args);
+        if (canStartService(name, def)) {
+          await startService(name, def.initFn, def.args, def.options);
+        }
         continue;
       }
 
       const health = serviceHealth.get(name);
       const state = health?.state || 'unknown';
-      const lastSeenAt = health?.lastSeenAt || 0;
-      const stale = now - lastSeenAt > WATCHDOG_DEAD_MS;
+      const lastStartAt = health?.lastStartAt || 0;
+      const cooldownPassed = now - lastStartAt > WATCHDOG_RESTART_COOLDOWN_MS;
 
-      if ((state === 'error' || state === 'closed') && stale) {
-        warn(`[WATCHDOG] ${name} stale (${state}), restarting...`);
+      if ((state === 'error' || state === 'closed') && cooldownPassed && shouldRestartOnError(def)) {
+        warn(`[WATCHDOG] ${name} ${state}, restarting...`);
         services.delete(name);
-        await startService(name, def.initFn, def.args);
+        await startService(name, def.initFn, def.args, def.options);
       }
     }
   }, WATCHDOG_INTERVAL_MS);
@@ -149,7 +163,7 @@ export async function startAll({ helloData }) {
         helloData: helloData,
         onStateChange: st => log(`[controlWS] state=${st}`),
         onFatalError: e => warn(`[controlWS] fatal: ${e.message}`)
-    });
+    }, { restartOnError: false });
 
     // Запуск сервис аотправки во внешний мир сообщений от других сервисов
     await startService(servicesList.sendMsg, initSendMsgService, {});
@@ -185,34 +199,34 @@ export async function startAll({ helloData }) {
             // событие может возникать часто  - реконнекты и тд
             if (!isServiceRunning(servicesList.controlAgentWS)) {
                 const controlUrl = `${connectConfig.SERVER_URLWS.replace(/\/$/, '')}/wsAgent/control`;
-                await startService(servicesList.controlAgentWS, initWS_ControlAgent, {
-                    url: controlUrl,
-                    onStateChange: st => log(`[controlAgentWS] state=${st}`),
-                    onFatalError: e => warn(`[controlAgentWS] fatal: ${e.message}`)
-                });
-            }
+            await startService(servicesList.controlAgentWS, initWS_ControlAgent, {
+                url: controlUrl,
+                onStateChange: st => log(`[controlAgentWS] state=${st}`),
+                onFatalError: e => warn(`[controlAgentWS] fatal: ${e.message}`)
+            }, { restartOnError: false, requiresOpenService: servicesList.controlWS });
+        }
 
             // запускаем канал метрики
             if (!isServiceRunning(servicesList.metrikaAgentWS)) {
                 const controlUrl = `${connectConfig.SERVER_URLWS.replace(/\/$/, '')}/wsAgent/metrika`;
-                await startService(servicesList.metrikaAgentWS, initWS_MetrikaAgent, {
-                    url: controlUrl,
-                    onStateChange: st => log(`[metrikaAgentWS] state=${st}`),
-                    onFatalError: e => warn(`[metrikaAgentWS] fatal: ${e.message}`)
-                });
-            }
+            await startService(servicesList.metrikaAgentWS, initWS_MetrikaAgent, {
+                url: controlUrl,
+                onStateChange: st => log(`[metrikaAgentWS] state=${st}`),
+                onFatalError: e => warn(`[metrikaAgentWS] fatal: ${e.message}`)
+            }, { restartOnError: false, requiresOpenService: servicesList.controlWS });
+        }
 
             // запускаем канал RC
             // ТУТ ВОПРОС: количество каналов RC должно соответствовать 
             //             количеству устройств RC ?
             if (!isServiceRunning(servicesList.rcWS)) {
                 const controlUrl = `${connectConfig.SERVER_URLWS.replace(/\/$/, '')}/wsAgent/rc`;
-                await startService(servicesList.rcWS, initWS_RCAgent, {
-                    url: controlUrl,
-                    onStateChange: st => log(`[metrikaAgentWS] state=${st}`),
-                    onFatalError: e => warn(`[metrikaAgentWS] fatal: ${e.message}`)
-                });
-            }
+            await startService(servicesList.rcWS, initWS_RCAgent, {
+                url: controlUrl,
+                onStateChange: st => log(`[metrikaAgentWS] state=${st}`),
+                onFatalError: e => warn(`[metrikaAgentWS] fatal: ${e.message}`)
+            }, { restartOnError: false, requiresOpenService: servicesList.controlWS });
+        }
 
             // TODO: добавить другие сервисы потом
         });
