@@ -88,6 +88,8 @@ class DeviceMonitor {
       //  в будущем:
       // bus.emit('device:changed', changes)
     }
+
+    return changes;
   }
 
   getSnapshot() {
