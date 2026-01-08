@@ -20,7 +20,8 @@ function normalize(raw) {
     norm[type] = list.map(d => ({
       path: d.path,
       status: 'online',
-      ...(type === 'video' && d.labelHint ? { labelHint: d.labelHint } : {})
+      ...(type === 'video' && d.labelHint ? { labelHint: d.labelHint } : {}),
+      ...(type === 'video' && d.hardwareId ? { hardwareId: d.hardwareId } : {})
     }));
   }
 

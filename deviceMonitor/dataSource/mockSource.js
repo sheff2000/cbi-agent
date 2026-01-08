@@ -6,8 +6,8 @@ export const mockSource = {
   async scan() {
     return {
       video: [
-        { path: '/dev/video0' },
-        { path: '/dev/video2' }
+        { path: '/dev/video0', labelHint: 'Mock Camera 0', hardwareId: 'mock:video0' },
+        { path: '/dev/video2', labelHint: 'Mock Camera 2', hardwareId: 'mock:video2' }
       ],
       serial: [
         { path: '/dev/ttyUSB0' }
@@ -15,4 +15,3 @@ export const mockSource = {
     };
   }
 };
-

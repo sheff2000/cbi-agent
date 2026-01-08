@@ -30,6 +30,7 @@ export function buildDefaultState(physicalSnapshot) {
       path: cam.path,
       status: cam.status || 'online',
       labelHint: cam.labelHint,
+      hardwareId: cam.hardwareId,
       inUse: false, // ресурс используется?
     });
   }

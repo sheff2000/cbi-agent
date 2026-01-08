@@ -50,21 +50,36 @@ export class DeviceRegistry {
         if (!list) continue;
 
         if (event === 'added') {
+          const snapshot = this.deviceMonitor.getSnapshot();
+          const addedDevice = type === 'video'
+            ? snapshot.video.find(d => d.path === path)
+            : snapshot.serial.find(d => d.path === path);
+          const hardwareId = addedDevice?.hardwareId;
+
           // ищем logical, который был offline и ждал этот path
           let found = list.find(d => d.path === path);
 
           if (found) {
             found.status = 'online';
+            if (hardwareId) found.hardwareId = hardwareId;
             dirty = true;
             continue;
           }
 
+          // если есть hardwareId — пытаемся вернуть прежний logical
+          if (hardwareId) {
+            const offline = list.find(d => d.hardwareId === hardwareId && d.status === 'offline');
+            if (offline) {
+              offline.path = path;
+              offline.status = 'online';
+              offline.inUse = false;
+              dirty = true;
+              continue;
+            }
+          }
+
           // новый physical → создаем новый logical
           const nextId = `${type === 'video' ? 'camera' : 'rc'}${list.length + 1}`;
-          const snapshot = this.deviceMonitor.getSnapshot();
-          const addedDevice = type === 'video'
-            ? snapshot.video.find(d => d.path === path)
-            : null;
 
           list.push({
             id: nextId,
@@ -72,6 +87,7 @@ export class DeviceRegistry {
             path,
             status: 'online',
             ...(addedDevice?.labelHint ? { labelHint: addedDevice.labelHint } : {}),
+            ...(hardwareId ? { hardwareId } : {}),
             inUse: false, 
           });
 
