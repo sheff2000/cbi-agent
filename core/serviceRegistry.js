@@ -23,6 +23,13 @@ import { initVideoService } from '../videoService/videoService.js';
 
 // Внутренний список активных сервисов
 export const services = new Map();
+const serviceHealth = new Map();
+const serviceDefs = new Map();
+let watchdogTimer = null;
+let busHooksRegistered = false;
+
+const WATCHDOG_INTERVAL_MS = Number(process.env.WATCHDOG_INTERVAL_MS || 5000);
+const WATCHDOG_DEAD_MS = Number(process.env.WATCHDOG_DEAD_MS || 30000);
 
 /** TO DO:
  *  Поддержка событий на registry уровне
@@ -44,6 +51,8 @@ export const services = new Map();
 
 
 async function startService(name, initFn, args = {}) {
+  serviceDefs.set(name, { initFn, args });
+  updateHealth(name, { state: 'starting', lastStartAt: Date.now() });
   try {
     // Запускаем функцию и ждём, что она вернёт объект сервиса
     const instance = await initFn(args);
@@ -52,6 +61,13 @@ async function startService(name, initFn, args = {}) {
     services.set(name, instance);
 
     log(`[SERVICE] ${name} запущен`);
+    updateHealth(name, {
+      state: 'running',
+      lastSeenAt: Date.now(),
+      lastError: null
+    });
+
+    attachHealthHooks(name, instance);
 
     // Возвращаем сам объект
     return instance;
@@ -59,8 +75,67 @@ async function startService(name, initFn, args = {}) {
   } catch (e) {
     // Если модуль грохнулся при запуске — не ломаем весь агент
     warn(`[SERVICE] ошибка запуска ${name}: ${e.message}`);
+    updateHealth(name, { state: 'error', lastError: e?.message || String(e) });
     return null;
   }
+}
+
+function attachHealthHooks(name, instance) {
+  if (!instance || typeof instance.on !== 'function') return;
+  instance.on('state', ({ state: st }) => {
+    updateHealth(name, { state: st, lastSeenAt: Date.now() });
+  });
+  instance.on('error', (e) => {
+    updateHealth(name, { state: 'error', lastError: e?.message || String(e) });
+  });
+}
+
+function updateHealth(name, patch) {
+  const current = serviceHealth.get(name) || {
+    state: 'idle',
+    lastStartAt: null,
+    lastSeenAt: null,
+    lastError: null
+  };
+  serviceHealth.set(name, { ...current, ...patch });
+}
+
+function startWatchdog() {
+  if (watchdogTimer) return;
+  watchdogTimer = setInterval(async () => {
+    const now = Date.now();
+    for (const [name, def] of serviceDefs) {
+      if (!services.has(name)) {
+        await startService(name, def.initFn, def.args);
+        continue;
+      }
+
+      const health = serviceHealth.get(name);
+      const state = health?.state || 'unknown';
+      const lastSeenAt = health?.lastSeenAt || 0;
+      const stale = now - lastSeenAt > WATCHDOG_DEAD_MS;
+
+      if ((state === 'error' || state === 'closed') && stale) {
+        warn(`[WATCHDOG] ${name} stale (${state}), restarting...`);
+        services.delete(name);
+        await startService(name, def.initFn, def.args);
+      }
+    }
+  }, WATCHDOG_INTERVAL_MS);
+}
+
+function stopWatchdog() {
+  if (!watchdogTimer) return;
+  clearInterval(watchdogTimer);
+  watchdogTimer = null;
+}
+
+export function getHealthReport() {
+  const report = {};
+  for (const [name, health] of serviceHealth.entries()) {
+    report[name] = health;
+  }
+  return report;
 }
 
 // Централизованный запуск всех
@@ -98,64 +173,71 @@ export async function startAll({ helloData }) {
     );*/
 
   
-    // Запуск по событиям
-    // Сервисы котрые будут запускатся после появления нужного события
+    if (!busHooksRegistered) {
+        // Запуск по событиям
+        // Сервисы котрые будут запускатся после появления нужного события
 
-    // когда выполнена атворизация в канале controlWS (WS device)
-    // запускаем wsAgent/control и другие
-    bus.on(EVENTS.WS_AUTH_OK, async () => {
-        log('WS DEVICE - атворизован! Запускаем wsAgent/control');
-        
-        // событие может возникать часто  - реконнекты и тд
-        if (!isServiceRunning(servicesList.controlAgentWS)) {
-            const controlUrl = `${connectConfig.SERVER_URLWS.replace(/\/$/, '')}/wsAgent/control`;
-            await startService(servicesList.controlAgentWS, initWS_ControlAgent, {
-                url: controlUrl,
-                onStateChange: st => log(`[controlAgentWS] state=${st}`),
-                onFatalError: e => warn(`[controlAgentWS] fatal: ${e.message}`)
-            });
-        }
-
-        // запускаем канал метрики
-        if (!isServiceRunning(servicesList.metrikaAgentWS)) {
-            const controlUrl = `${connectConfig.SERVER_URLWS.replace(/\/$/, '')}/wsAgent/metrika`;
-            await startService(servicesList.metrikaAgentWS, initWS_MetrikaAgent, {
-                url: controlUrl,
-                onStateChange: st => log(`[metrikaAgentWS] state=${st}`),
-                onFatalError: e => warn(`[metrikaAgentWS] fatal: ${e.message}`)
-            });
-        }
-
-        // запускаем канал RC
-        // ТУТ ВОПРОС: количество каналов RC должно соответствовать 
-        //             количеству устройств RC ?
-        if (!isServiceRunning(servicesList.rcWS)) {
-            const controlUrl = `${connectConfig.SERVER_URLWS.replace(/\/$/, '')}/wsAgent/rc`;
-            await startService(servicesList.rcWS, initWS_RCAgent, {
-                url: controlUrl,
-                onStateChange: st => log(`[metrikaAgentWS] state=${st}`),
-                onFatalError: e => warn(`[metrikaAgentWS] fatal: ${e.message}`)
-            });
-        }
-
-        // TODO: добавить другие сервисы потом
-    });
-
-    // потеря основного коннекта
-    bus.on(EVENTS.WS_CLOSED, async () => {
-        log('[SERVICE] controlWS потерян - останавливаем зависимые сервисы');
-        const svc = getService(servicesList.controlAgentWS);
-        if (svc) {
-            try {
-                svc.close();
-                services.delete(servicesList.controlAgentWS);
-                log('[SERVICE] controlAgentWS остановлен из-за потери controlWS');
-            } catch (e) {
-                warn('[SERVICE] ошибка остановки controlAgentWS', e.message);
+        // когда выполнена атворизация в канале controlWS (WS device)
+        // запускаем wsAgent/control и другие
+        bus.on(EVENTS.WS_AUTH_OK, async () => {
+            log('WS DEVICE - атворизован! Запускаем wsAgent/control');
+            
+            // событие может возникать часто  - реконнекты и тд
+            if (!isServiceRunning(servicesList.controlAgentWS)) {
+                const controlUrl = `${connectConfig.SERVER_URLWS.replace(/\/$/, '')}/wsAgent/control`;
+                await startService(servicesList.controlAgentWS, initWS_ControlAgent, {
+                    url: controlUrl,
+                    onStateChange: st => log(`[controlAgentWS] state=${st}`),
+                    onFatalError: e => warn(`[controlAgentWS] fatal: ${e.message}`)
+                });
             }
-        }
-        // TODO: не забыть добавить другие сервисы потом
-    });
+
+            // запускаем канал метрики
+            if (!isServiceRunning(servicesList.metrikaAgentWS)) {
+                const controlUrl = `${connectConfig.SERVER_URLWS.replace(/\/$/, '')}/wsAgent/metrika`;
+                await startService(servicesList.metrikaAgentWS, initWS_MetrikaAgent, {
+                    url: controlUrl,
+                    onStateChange: st => log(`[metrikaAgentWS] state=${st}`),
+                    onFatalError: e => warn(`[metrikaAgentWS] fatal: ${e.message}`)
+                });
+            }
+
+            // запускаем канал RC
+            // ТУТ ВОПРОС: количество каналов RC должно соответствовать 
+            //             количеству устройств RC ?
+            if (!isServiceRunning(servicesList.rcWS)) {
+                const controlUrl = `${connectConfig.SERVER_URLWS.replace(/\/$/, '')}/wsAgent/rc`;
+                await startService(servicesList.rcWS, initWS_RCAgent, {
+                    url: controlUrl,
+                    onStateChange: st => log(`[metrikaAgentWS] state=${st}`),
+                    onFatalError: e => warn(`[metrikaAgentWS] fatal: ${e.message}`)
+                });
+            }
+
+            // TODO: добавить другие сервисы потом
+        });
+
+        // потеря основного коннекта
+        bus.on(EVENTS.WS_CLOSED, async () => {
+            log('[SERVICE] controlWS потерян - останавливаем зависимые сервисы');
+            const svc = getService(servicesList.controlAgentWS);
+            if (svc) {
+                try {
+                    svc.close();
+                    services.delete(servicesList.controlAgentWS);
+                    updateHealth(servicesList.controlAgentWS, { state: 'closed' });
+                    log('[SERVICE] controlAgentWS остановлен из-за потери controlWS');
+                } catch (e) {
+                    warn('[SERVICE] ошибка остановки controlAgentWS', e.message);
+                }
+            }
+            // TODO: не забыть добавить другие сервисы потом
+        });
+
+        busHooksRegistered = true;
+    }
+
+    startWatchdog();
 }
 
 export function isServiceRunning(name) {
@@ -169,13 +251,16 @@ export function getService(name) {
 // Централизованное завершение
 export async function stopAll() {
     log('[SERVICE] остановка всех сервисов...');
+    stopWatchdog();
     for (const [name, svc] of services) {
         try {
             if (svc?.stop) await svc.stop();
             else if (svc?.client?.close) svc.client.close();
             log(`[SERVICE] ${name} остановлен`);
+            updateHealth(name, { state: 'stopped' });
         } catch (e) {
             warn(`[SERVICE] ошибка остановки ${name}: ${e.message}`);
+            updateHealth(name, { state: 'error', lastError: e?.message || String(e) });
         }
     }
     services.clear();
