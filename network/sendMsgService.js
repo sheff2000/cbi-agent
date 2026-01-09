@@ -80,6 +80,32 @@ export function initSendMsgService() {
 
     });
 
+    bus.on(EVENTS.VIDEO_STREAM_STATUS, payload => {
+        const ws = services.get(servicesList.controlAgentWS)?.getSocket?.();
+        if (!ws) return;
+
+        if (payload.state === 'started') {
+            safeSendJSON(ws, {
+                type: EVENTS.AGENT_VIDEO_STARTED,
+                data: {
+                    sessionId: payload.sessionId,
+                    cameraId: payload.cameraId,
+                    streamId: payload.streamId,
+                }
+            });
+        } else if (payload.state === 'error') {
+            safeSendJSON(ws, {
+                type: EVENTS.AGENT_VIDEO_FAILED,
+                data: {
+                    sessionId: payload.sessionId,
+                    cameraId: payload.cameraId,
+                    streamId: payload.streamId,
+                    reason: payload.reason
+                }
+            });
+        }
+    });
+
 
     bus.on(EVENTS.SEND_CONTROL_PACKET, ({ ws, msg }) => {
         ws.sendJSON(msg);
