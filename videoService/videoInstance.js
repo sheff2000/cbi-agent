@@ -24,6 +24,7 @@ export class VideoInstance {
     this.cb({
       streamId: this.streamId,
       cameraId: this.device.id,
+      sessionId: this.sessionId,
       state,
       reason,
       ts: Date.now()
@@ -35,7 +36,7 @@ export class VideoInstance {
 
     try {
       this.proc = launchChrome({
-        devicePath: this.device.path,
+        cameraId: this.device.id,
         labelHint: this.device.labelHint,
         flightId: this.flightId,
         flightUrl: this.flightUrl,
