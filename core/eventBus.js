@@ -38,7 +38,7 @@ const EVENT_SCHEMA = {
     required: ['cpu', 'mem', 'net', 'uptime_s', 'timestamp'],
   },
   [EVENTS.VIDEO_STREAM_STATUS]: {
-    required: ['streamId', 'cameraId', 'state', 'ts'],
+    required: ['streamId', 'cameraId', 'state', 'ts', 'sessionId'],
   },
 };
 
