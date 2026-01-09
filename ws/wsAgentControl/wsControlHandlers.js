@@ -40,7 +40,7 @@ export function handleControlMessage(ws, packet) {
 
             if (!isValidStartPayload(packet?.data)) {
                 sendControlJSON(ws, {
-                    type: EVENTS.AGENT_VIDEO_START_REJECTED,
+                    type: EVENTS.AGENT_VIDEO_START_FAILED,
                     data: { sessionId, reason: 'invalid_payload' }
                 });
                 return;
@@ -56,7 +56,7 @@ export function handleControlMessage(ws, packet) {
                 // отправка ошибки - тип пакета надо другой!
                 log(`[CONTROL] ERROR VIDEO START ... ${resDevice.reason}`);
                 sendControlJSON(ws, {
-                    type: EVENTS.AGENT_VIDEO_START_REJECTED,
+                    type: EVENTS.AGENT_VIDEO_START_FAILED,
                     data: { sessionId, reason: resDevice.reason }
                 });
 

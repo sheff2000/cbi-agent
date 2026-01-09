@@ -103,6 +103,15 @@ export function initSendMsgService() {
                     reason: payload.reason
                 }
             });
+        } else if (payload.state === 'stopped') {
+            safeSendJSON(ws, {
+                type: EVENTS.AGENT_VIDEO_STOPPED,
+                data: {
+                    sessionId: payload.sessionId,
+                    cameraId: payload.cameraId,
+                    streamId: payload.streamId,
+                }
+            });
         }
     });
 
