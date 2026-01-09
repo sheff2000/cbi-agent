@@ -4,7 +4,7 @@ import { loadDeviceCreds } from '../identity/index.js';
 import { warn } from '../logger.js';
 
 export function launchChrome({
-  devicePath,
+  cameraId,
   labelHint = null,
   flightId,
   flightUrl,
@@ -25,7 +25,7 @@ export function launchChrome({
       `&userId=${userId}` +
       `&sessionId=${sessionId}` + 
       `${cameraHintParam}` +
-      `&cameraId=${encodeURIComponent(devicePath)}`;
+      `&cameraId=${encodeURIComponent(cameraId)}`;
 
     const args = [
       '--headless=new',
