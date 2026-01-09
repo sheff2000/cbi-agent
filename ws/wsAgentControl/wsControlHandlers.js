@@ -14,6 +14,7 @@ export function handleControlMessage(ws, packet) {
     let resDevice;
     let controlId;
     let cameraId;
+    let sessionId;
 
     switch (packet.type) {
 
@@ -33,8 +34,18 @@ export function handleControlMessage(ws, packet) {
 
         case EVENTS.AGENT_VIDEO_START:
             log(`[CONTROL] VIDEO START .... ${JSON.stringify(packet,null,2)}`);
-            controlId = packet.data.controlId;
-            cameraId  = packet.data.cameraId;
+            controlId = packet?.data?.controlId;
+            cameraId  = packet?.data?.cameraId;
+            sessionId = packet?.data?.sessionId;
+
+            if (!isValidStartPayload(packet?.data)) {
+                sendControlJSON(ws, {
+                    type: EVENTS.AGENT_VIDEO_START_REJECTED,
+                    data: { sessionId, reason: 'invalid_payload' }
+                });
+                return;
+            }
+
             // провверем наличие доступа к камере
             resDevice = deviceRegistry.requestVideo({
                 controlId,
@@ -44,7 +55,10 @@ export function handleControlMessage(ws, packet) {
             if (!resDevice.ok) {
                 // отправка ошибки - тип пакета надо другой!
                 log(`[CONTROL] ERROR VIDEO START ... ${resDevice.reason}`);
-                ws.send(JSON.stringify({ type: 'error', reason: resDevice.reason }));
+                sendControlJSON(ws, {
+                    type: EVENTS.AGENT_VIDEO_START_REJECTED,
+                    data: { sessionId, reason: resDevice.reason }
+                });
 
                 return;
             }
@@ -58,6 +72,11 @@ export function handleControlMessage(ws, packet) {
                 tokenAccess: packet.data.accessToken,
                 sessionId: packet.data.sessionId,
                 userId: packet.data.requestedBy.userId,
+            });
+
+            sendControlJSON(ws, {
+                type: EVENTS.AGENT_VIDEO_START_ACCEPTED,
+                data: { sessionId }
             });
 
             // может лучше событием / может прямым запуском
@@ -75,6 +94,7 @@ export function handleControlMessage(ws, packet) {
         case EVENTS.AGENT_VIDEO_STOP:
             controlId = packet.data.controlId;
             cameraId  = packet.data.cameraId;
+            sessionId = packet?.data?.sessionId;
             // освобождаем камеру
             resDevice = deviceRegistry.releaseVideo({
                 cameraId
@@ -83,7 +103,11 @@ export function handleControlMessage(ws, packet) {
             if (!resDevice.ok) {
                 // отправка ошибки - тип пакета надо другой!
                 log(`[CONTROL] ERROR VIDEO STOP ... ${resDevice.reason}`);
-                ws.send(JSON.stringify({ type: 'error', reason: resDevice.reason }));
+                sendControlJSON(ws, {
+                    type: 'error',
+                    reason: resDevice.reason,
+                    data: { sessionId }
+                });
 
                 return;
             }
@@ -111,4 +135,32 @@ export function handleControlMessage(ws, packet) {
         default:
             log(`[CONTROL_WS] нераспознанный тип сообщения: ${packet.type}`);
     }
+}
+
+function isValidStartPayload(data) {
+    if (!data) return false;
+    const required = [
+        'flightId',
+        'flightUrl',
+        'accessToken',
+        'cameraId',
+        'controlId',
+        'sessionId',
+        'requestedBy'
+    ];
+    for (const key of required) {
+        if (data[key] === undefined || data[key] === null) return false;
+    }
+    if (!data.requestedBy?.userId) return false;
+    return true;
+}
+
+function sendControlJSON(ws, msg) {
+    if (typeof ws?.sendJSON === 'function') {
+        ws.sendJSON(msg);
+        return;
+    }
+    try {
+        ws.send(JSON.stringify(msg));
+    } catch {}
 }
