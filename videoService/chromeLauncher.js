@@ -1,7 +1,7 @@
 // video/chromeLauncher.js
 import { spawn } from 'child_process';
 import { loadDeviceCreds } from '../identity/index.js';
-import { warn } from '../logger.js';
+import { log, warn } from '../logger.js';
 
 export function launchChrome({
   cameraId,
@@ -38,7 +38,7 @@ export function launchChrome({
       `--user-data-dir=/tmp/chrome_${Date.now()}`,
       url
     ];
-
+    //log(`[VIDEO] URL: ${url}`);
      const chromeBin = process.env.CHROMIUM_BIN || 'chromium';
      const proc = spawn(chromeBin, args, { stdio: 'ignore' });
      proc.on('error', err => {
