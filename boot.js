@@ -17,8 +17,9 @@ import { getHardwareId } from './identity/index.js';
 import { startAll, restartAll } from './core/serviceRegistry.js';
 import { deviceMonitor } from './deviceMonitor/deviceMonitor.js';
 import { deviceRegistry } from './deviceRegistry/index.js';
+import { getAgentMode } from './utilits/agentMode.js';
 
-const AGENT_MODE = process.env.AGENT_MODE || 'dev';
+const AGENT_MODE = getAgentMode();
 const AGENT_VERSION = '0.2'; // версия софта агента
 const HW_ID_VERSION = 'v1';  // версия генерации основного ключа
 
@@ -67,7 +68,7 @@ const helloData = {
   identity: {  
     hardware_id,
     hw_id_version: 'v1',
-    mode: 'dev' | 'sim' | 'prod'
+    mode: AGENT_MODE
   },
   agent: {
     name: 'js-agent',
