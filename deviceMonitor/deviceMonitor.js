@@ -11,6 +11,7 @@ import { log } from '../logger.js';
 import { mockSource } from './dataSource/mockSource.js';
 import { simSource } from './dataSource/simSource.js';
 import { linuxSource } from './dataSource/linuxSource.js';
+import { getAgentMode } from '../utilits/agentMode.js';
 
 function normalize(raw) {
   const norm = { video: [], serial: [] };
@@ -63,7 +64,7 @@ class DeviceMonitor {
     if (this.started) return;
     this.started = true;
 
-    const mode = process.env.AGENT_MODE || 'dev';
+    const mode = getAgentMode();
 
     if (mode === 'prod') this.source = linuxSource;
     else if (mode === 'sim') this.source = simSource;
