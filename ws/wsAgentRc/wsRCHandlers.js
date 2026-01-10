@@ -15,8 +15,14 @@ export function handleRCMessage(ws, packet) {
     switch (packet.type) {
 
         case 'AUTH_OK':
-            log('[RC_WS] авторизация успешна');
+        case 'auth::ok':
+            log(`[RC_WS] авторизация успешна (device_id=${packet?.device_id || packet?.data?.device_id || 'unknown'})`);
             bus.emit(EVENTS.AGENT_RC_AUTH_OK);
+            break;
+        case 'AUTH_FAILED':
+        case 'auth::fail':
+        case 'auth::error':
+            warn(`[RC_WS] ошибка авторизации (type=${packet.type})`);
             break;
 
         case 'RC_CHANNELS':

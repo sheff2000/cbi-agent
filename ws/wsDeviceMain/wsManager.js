@@ -102,6 +102,7 @@ export function initWS({ url, helloData, onStateChange, onFatalError }) {
             return;
         }
 
+        log(`[WS] AUTH_REQUIRED -> send DEVICE_AUTH (device_id=${creds.device_id})`);
         client.sendJSON({ 
             type:'DEVICE_AUTH', 
             data: { 
@@ -125,6 +126,7 @@ export function initWS({ url, helloData, onStateChange, onFatalError }) {
         const device_key = packet?.data?.device_key || '';
         if (!device_id || !device_key) return;
         
+        log(`[WS] DEVICE_PROVISION -> save creds (device_id=${device_id})`);
         saveDeviceCreds({ hardware_id, device_id, device_key });
         // после сохранения можно сразу отправить AUTH
         client.sendJSON({ 

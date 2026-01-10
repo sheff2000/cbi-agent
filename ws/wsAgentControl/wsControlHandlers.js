@@ -19,13 +19,14 @@ export function handleControlMessage(ws, packet) {
     switch (packet.type) {
 
         case 'auth::ok':
-            log('[CONTROL_WS] авторизация успешна');
+            log(`[CONTROL_WS] авторизация успешна (device_id=${packet?.device_id || packet?.data?.device_id || 'unknown'})`);
             bus.emit(EVENTS.AGENT_CONTROL_AUTH_OK, packet);
             break;
 
+        case 'auth::fail':
         case 'auth::failed':
         case 'auth::error':
-            warn('[CONTROL_WS] ошибка авторизации');
+            warn(`[CONTROL_WS] ошибка авторизации (type=${packet.type})`);
             bus.emit(EVENTS.AGENT_CONTROL_AUTH_FAILED, packet);
             break;
 

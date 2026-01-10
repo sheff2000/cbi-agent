@@ -135,10 +135,13 @@ export function createAgentWS({
                 
                 // для wsagent/control пакет авторизации
                 log(`[START WS] NAME - ${name} ... hello - ${JSON.stringify(helloData, null,2)}`);
-                if (name === 'CONTROL_WS' || name === 'METRIKA_WS' || name === 'RC_WS')
-                    sendJSON( helloData );
-                else
+                if (name === 'CONTROL_WS' || name === 'METRIKA_WS' || name === 'RC_WS') {
+                    const deviceId = helloData?.data?.device_id || '<missing>';
+                    log(`[AUTH] ${name} -> send auth (device_id=${deviceId})`);
+                    sendJSON(helloData);
+                } else {
                     sendJSON({ type: 'DEVICE_HELLO', data: helloData });
+                }
                 //log(`[${name}] соединение установлено`);
                 onOpen?.(ws);
                 emit('state', { state: 'open', ws });

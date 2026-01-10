@@ -139,12 +139,12 @@ function wsHandler_MSG(ws, packet)
       case 'ENROLL_REQUIRED':
         // Администртор должен подтвердить и привязать устройство
         bus.emit(EVENTS.WS_ENROLL_REQUIRED);
-        //log(`[WS] ENROLL_REQUIRED | Admin must approve device : ${packet.msgError}`);  
+        log(`[WS] ENROLL_REQUIRED | Admin must approve device : ${packet.msgError}`);  
         break;
 
       case 'AUTH_OK':
         // успешная авторизация
-        log('[WS CONTROL] Успешная авторизация ....');
+        log(`[WS] AUTH_OK (device_id=${packet?.data?.device_id || 'unknown'}, session_id=${packet?.data?.session_id || 'n/a'})`);
         bus.emit(EVENTS.WS_AUTH_OK, { ws });
         //`[WS] AUTH_OK ...  ${packet.msgError}`);
         break;
