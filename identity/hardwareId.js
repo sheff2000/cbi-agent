@@ -11,6 +11,7 @@ import fs from 'fs';
 import os from 'os';
 
 import { loadIdentity, saveIdentity } from './storageRouter.js';
+import { normalizeAgentMode } from '../utilits/agentMode.js';
 
 function sha(input) {
   return crypto.createHash('sha256').update(input).digest('hex');
@@ -59,15 +60,24 @@ function buildFingerprint(mode) {
 }
 
 export function getHardwareId({ mode }) {
+  const normalizedMode = normalizeAgentMode(mode);
   const stored = loadIdentity();
-  if (stored?.hardware_id) {
+
+  let hardware_id = null;
+  try {
+    const fingerprint = buildFingerprint(normalizedMode);
+    hardware_id = `hw:v1:${normalizedMode}:${sha(fingerprint).slice(0, 16)}`;
+  } catch (e) {
+    if (stored?.hardware_id) return stored.hardware_id;
+    throw e;
+  }
+
+  if (stored?.hardware_id === hardware_id) {
     return stored.hardware_id;
   }
 
-  const fingerprint = buildFingerprint(mode);
-  const hardware_id = `hw:v1:${mode}:${sha(fingerprint).slice(0, 16)}`;
-
-  saveIdentity({ hardware_id });
+  // hardware_id changed -> clear creds to force new authorization
+  saveIdentity({ hardware_id, device_id: null, device_key: null });
 
   return hardware_id;
 }
