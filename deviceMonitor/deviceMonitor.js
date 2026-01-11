@@ -88,6 +88,14 @@ class DeviceMonitor {
 
     if (changes.length) {
       log('[DeviceMonitor] changes:', changes);
+      log('[DeviceMonitor] snapshot video:', this.snapshot.video.map(d => ({
+        path: d.path,
+        labelHint: d.labelHint,
+        hardwareId: d.hardwareId
+      })));
+      log('[DeviceMonitor] snapshot serial:', this.snapshot.serial.map(d => ({
+        path: d.path
+      })));
       //  в будущем:
       // bus.emit('device:changed', changes)
     }
