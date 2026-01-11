@@ -11,6 +11,7 @@ import fs from 'fs';
 import os from 'os';
 
 import { loadIdentity, saveIdentity } from './storageRouter.js';
+import { log } from '../logger.js';
 import { normalizeAgentMode } from '../utilits/agentMode.js';
 
 function sha(input) {
@@ -45,10 +46,11 @@ function buildFingerprint(mode) {
 
   }
 
+  const strict = String(process.env.HWID_STRICT || '').trim() === '1';
   const parts = [
     getLinuxMachineId(),
     os.hostname(),
-    getMacAddresses(),
+    ...(strict ? [getMacAddresses()] : []),
     os.arch(),
   ].filter(Boolean).join('|');
 
@@ -63,6 +65,7 @@ export function getHardwareId({ mode }) {
   const normalizedMode = normalizeAgentMode(mode);
   const stored = loadIdentity();
 
+  const strict = String(process.env.HWID_STRICT || '').trim() === '1';
   let hardware_id = null;
   try {
     const fingerprint = buildFingerprint(normalizedMode);
@@ -72,6 +75,7 @@ export function getHardwareId({ mode }) {
     throw e;
   }
 
+  log(`[HWID] mode=${normalizedMode} strict=${strict ? '1' : '0'}`);
   if (stored?.hardware_id === hardware_id) {
     return stored.hardware_id;
   }
