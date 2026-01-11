@@ -46,8 +46,9 @@ export class VideoInstance {
       });
       if (!this.proc) throw new Error('launch_failed');
 
-      this.proc.on('exit', () => {
+      this.proc.on('exit', (code, signal) => {
         this.emit('error', 'process_exit');
+        this.emit('stopped', `exit_code=${code ?? 'null'} signal=${signal ?? 'null'}`);
       });
 
       this.emit('started');

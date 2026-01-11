@@ -42,7 +42,7 @@ export async function initVideoService() {
     try {
       await inst.start();
     } catch (e) {
-      warn('[VIDEO] start failed', e.message);
+      warn('[VIDEO] start failed', e?.message || e);
       state.remove(streamId);
     }
   });
